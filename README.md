@@ -1,6 +1,6 @@
 # 🏛️ GiriloyoVerse
 
-![GiriloyoVerse Banner]([public/logo-web.png])
+![GiriloyoVerse Banner]([https://github.com/difadlyaulhaq/giriloyoverse/blob/080863ed85f8e2141dd7554c159a3ddb55f7a64d/public/logo-web.png])
 
 > **Warisan Budaya Bertemu Teknologi Masa Depan.**
 > Platform *Phygital* (Physical + Digital) untuk pelestarian, edukasi, dan perdagangan Batik Tulis Giriloyo yang diakui UNESCO.
