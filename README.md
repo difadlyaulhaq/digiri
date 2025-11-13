@@ -1,6 +1,6 @@
-# 🏛️ GiriloyoVerse
+# 🏛️ Giriloyo Immersive
 
-![GiriloyoVerse Banner](public/logo-web.png)
+![Giriloyo Immersive Banner](public/logo-web.png)
 
 > **Warisan Budaya Bertemu Teknologi Masa Depan.**
 > Platform *Phygital* (Physical + Digital) untuk pelestarian, edukasi, dan perdagangan Batik Tulis Giriloyo yang diakui UNESCO.
@@ -12,7 +12,7 @@
 
 ## 📖 Tentang Proyek
 
-**GiriloyoVerse** adalah aplikasi web imersif yang mengangkat Desa Wisata Batik Giriloyo ke ranah digital. Proyek ini bukan sekadar *e-commerce*, melainkan ekosistem edukasi dan pelestarian budaya yang menggabungkan pengalaman nyata dengan teknologi blockchain dan AI.
+**Giriloyo Immersive** adalah aplikasi web imersif yang mengangkat Desa Wisata Batik Giriloyo ke ranah digital. Proyek ini bukan sekadar *e-commerce*, melainkan ekosistem edukasi dan pelestarian budaya yang menggabungkan pengalaman nyata dengan teknologi blockchain dan AI.
 
 Visi utama kami adalah konsep **"Phygital"**: Setiap pembelian fisik Batik Tulis akan disertai dengan sertifikat keaslian digital dalam bentuk **NFT** (Non-Fungible Token).
 
@@ -51,8 +51,8 @@ Pastikan Anda telah menginstal [Node.js](https://nodejs.org/) (versi 18 atau leb
 
 1.  **Clone repositori ini:**
     ```bash
-    git clone [https://github.com/username-anda/giriloyoverse.git](https://github.com/username-anda/giriloyoverse.git)
-    cd giriloyoverse
+    git clone [https://github.com/difadlyaulhaq/giriloyoimersive](https://github.com/difadlyaulhaq/giriloyoimersive)
+    cd giriloyoimersive
     ```
 
 2.  **Instal dependensi:**
@@ -75,7 +75,7 @@ Pastikan Anda telah menginstal [Node.js](https://nodejs.org/) (versi 18 atau leb
 ## 📂 Struktur Proyek
 
 Berikut adalah gambaran struktur folder utama proyek ini:
-giriloyoverse/ ├── components/ # Komponen UI yang dapat digunakan kembali (Navbar, Footer, dll) ├── pages/ # Halaman aplikasi (Next.js Pages Router) │ ├── api/ # API Routes (Backend serverless) │ ├── bookingwisatapage.tsx # Halaman Booking Eduwisata │ ├── checkoutpage.tsx # Halaman Pembayaran & Form │ ├── index.tsx # Landing Page Utama │ └── productdetailpage.tsx # Detail Produk & Zoom Gambar ├── public/ # Aset statis (Gambar Batik, Logo, Icon) ├── styles/ # File CSS global └── ...konfigurasi (tailwind, tsconfig, eslint, package.json)
+giriloyoimersive/ ├── components/ # Komponen UI yang dapat digunakan kembali (Navbar, Footer, dll) ├── pages/ # Halaman aplikasi (Next.js Pages Router) │ ├── api/ # API Routes (Backend serverless) │ ├── bookingwisatapage.tsx # Halaman Booking Eduwisata │ ├── checkoutpage.tsx # Halaman Pembayaran & Form │ ├── index.tsx # Landing Page Utama │ └── productdetailpage.tsx # Detail Produk & Zoom Gambar ├── public/ # Aset statis (Gambar Batik, Logo, Icon) ├── styles/ # File CSS global └── ...konfigurasi (tailwind, tsconfig, eslint, package.json)
 ## 🗺️ Roadmap Pengembangan
 
 - [x] **Fase 1: UI/UX & Frontend Core** (Landing Page, Katalog, Detail Produk).
