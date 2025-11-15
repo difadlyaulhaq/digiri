@@ -1,18 +1,57 @@
+// components/Navbar.tsx
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Menu, X, Calendar } from 'lucide-react';
+import { Menu, X, Calendar, ShoppingCart } from 'lucide-react';
+import { getCartItemCount } from '@/utils/cartUtils';
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrollY, setScrollY] = useState(0);
+  const [cartItemCount, setCartItemCount] = useState(0);
 
+  // First useEffect - initial setup
   useEffect(() => {
+    const initializeNavbar = async () => {
+      // Set initial cart count
+      setCartItemCount(await getCartItemCount());
+    };
+
+    initializeNavbar();
+
     const handleScroll = () => {
       setScrollY(window.scrollY);
     };
+    
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Second useEffect - cart updates and scroll listener
+  useEffect(() => {
+    const loadCartCount = async () => {
+      const count = await getCartItemCount();
+      setCartItemCount(count);
+    };
+
+    loadCartCount();
+
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+    
+    const handleCartUpdate = async () => {
+      const count = await getCartItemCount();
+      setCartItemCount(count);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('cartUpdated', handleCartUpdate);
+    };
   }, []);
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, targetId: string) => {
@@ -61,6 +100,14 @@ const Navbar = () => {
                 Booking Paket
               </button>
             </Link>
+            <Link href="/keranjang" className="relative">
+              <ShoppingCart size={24} />
+              {cartItemCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {cartItemCount}
+                </span>
+              )}
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -89,6 +136,14 @@ const Navbar = () => {
                 <Calendar size={18} />
                 Booking Paket Wisata
               </button>
+            </Link>
+            <Link href="/keranjang" className="block py-3 text-stone-700 hover:text-amber-800 hover:bg-amber-50 rounded-lg px-4 transition font-medium flex items-center justify-between">
+              <span>Keranjang</span>
+              {cartItemCount > 0 && (
+                <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {cartItemCount}
+                </span>
+              )}
             </Link>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { ShoppingBag, Gamepad2, Brain, Sparkles, Menu, X, ChevronRight, Award, Z
 import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import products from '@/data/products';
 
 const GiriloyoLanding = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -20,15 +21,20 @@ const GiriloyoLanding = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const featuredProducts = [
-    { id: 1, name: "Batik Kawung Klasik", price: "Rp 850.000", image: "/kawung.png", artisan: "Mbah Parmi", motif: "Kawung" },
-    { id: 2, name: "Batik Parang Rusak Tulis", price: "Rp 1.200.000", image: "/parang.png", artisan: "Pak Supardi", motif: "Parang" },
-    { id: 3, name: "Batik Sogan Modern", price: "Rp 950.000", image: "/sogan.png", artisan: "Bu Siti", motif: "Sogan" },
-    { id: 4, name: "Batik Truntum Elegan", price: "Rp 1.100.000", image: "/truntum.png", artisan: "Ibu Wahyuni", motif: "Truntum" },
-    { id: 5, name: "Batik Mega Mendung", price: "Rp 980.000", image: "/mega-mendung.png", artisan: "Pak Budi", motif: "Mega Mendung" },
-    { id: 6, name: "Batik Sekar Jagad", price: "Rp 1.350.000", image: "/sekar-jagad.png", artisan: "Bu Lastri", motif: "Sekar Jagad" }
-  ];
-
+// PERBAIKAN: Gunakan data produk dari products.ts yang sudah diperbaiki
+const featuredProducts = products.slice(0, 6).map(product => ({
+  id: product.id,
+  name: product.name,
+  price: new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0
+  }).format(product.price),
+  image: product.image,
+  artisan: product.artisan,
+  motif: product.motif,
+  slug: product.slug // PERBAIKAN: Tambahkan slug untuk routing
+}));
   const paketEduwisata = [
     {
       title: "Paket Half Day",
@@ -148,6 +154,16 @@ const GiriloyoLanding = () => {
               </span>
             </button>
           </Link>
+          <Link href="/keranjang" passHref>
+          <button 
+            className="group relative bg-gradient-to-r from-red-600 to-red-700 text-white w-14 h-14 rounded-full shadow-2xl hover:shadow-red-500/50 transition transform hover:scale-110 flex items-center justify-center"
+          >
+            <ShoppingBag size={24} />
+            <span className="absolute right-16 bg-stone-800 text-white px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none">
+              Keranjang
+            </span>
+          </button>
+        </Link>
         </div>
       )}
 
@@ -563,7 +579,7 @@ const GiriloyoLanding = () => {
 
           <div className="text-center">
             {/* PERBAIKAN: Implementasi Routing */}
-            <Link href="/productdetailpage" passHref>
+            <Link href="/produk" passHref>
               <button className="bg-gradient-to-r from-amber-800 to-amber-900 text-amber-50 px-10 py-4 rounded-full font-bold hover:shadow-xl transition transform hover:scale-105 text-base lg:text-lg">
                 Lihat Semua Motif
               </button>
@@ -672,7 +688,7 @@ const GiriloyoLanding = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-xl lg:text-2xl font-bold text-amber-700">{product.price}</span>
                     {/* PERBAIKAN: Implementasi Routing */}
-                    <Link href="/productdetailpage" passHref>
+                    <Link href={`/produk/${product.slug}`} passHref>
                       <button className="bg-gradient-to-r from-amber-800 to-amber-900 text-amber-50 px-4 lg:px-6 py-2 rounded-full font-semibold hover:shadow-lg transition transform hover:scale-105 text-sm lg:text-base">
                         Beli Sekarang
                       </button>
@@ -685,7 +701,7 @@ const GiriloyoLanding = () => {
 
           <div className="text-center mt-12">
             {/* PERBAIKAN: Implementasi Routing */}
-            <Link href="/productdetailpage" passHref>
+            <Link href="/produk" passHref>
               <button className="bg-white text-amber-800 px-8 py-4 rounded-full font-bold border-2 border-amber-800 hover:bg-amber-800 hover:text-amber-50 transition text-base lg:text-lg shadow-lg hover:shadow-xl transform hover:scale-105">
                 Lihat Semua Koleksi →
               </button>

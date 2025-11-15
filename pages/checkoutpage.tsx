@@ -1,10 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { ShoppingBag, MapPin, User, Mail, Phone, CreditCard, Shield, Award, CheckCircle, Sparkles } from 'lucide-react';
+import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { getCartItems, clearCart } from '@/utils/cartUtils';
+
+interface CartItem {
+  id: number;
+  name: string;
+  price: number;
+  size: string;
+  color: string;
+  quantity: number;
+  image: string;
+  slug: string;
+}
+
+interface FormData {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  province: string;
+  postalCode: string;
+  notes: string;
+}
 
 const CheckoutPage = () => {
+  const router = useRouter();
   const [step, setStep] = useState(1); // 1: Form, 2: Payment, 3: Success
-  const [formData, setFormData] = useState({
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
     phone: '',
@@ -15,17 +42,20 @@ const CheckoutPage = () => {
     notes: ''
   });
 
-  const cartItems = [
-    {
-      id: 1,
-      name: "Batik Kawung Klasik Premium",
-      size: "M",
-      color: "Sogan Natural",
-      quantity: 1,
-      price: 850000,
-      image: "/kawung.png"
-    }
-  ];
+  // Load cart items from cartUtils
+  useEffect(() => {
+    const loadCartItems = async () => {
+      const items = await getCartItems();
+      if (items.length === 0) {
+        // If no cart items, redirect to cart page
+        router.push('/keranjang');
+      } else {
+        setCartItems(items);
+      }
+    };
+
+    loadCartItems();
+  }, [router]);
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const shipping = 25000;
@@ -57,14 +87,20 @@ const CheckoutPage = () => {
     setStep(2);
   };
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     // Simulate Midtrans Snap payment
     alert('Opening Midtrans Payment Gateway...\n\nIn production, this will trigger:\n- POST /payment/initiate\n- Get snap_token\n- window.snap.pay(snap_token)');
     
     // Simulate success
-    setTimeout(() => {
+    setTimeout(async () => {
       setStep(3);
+      // Clear cart after successful payment using cartUtils
+      await clearCart();
     }, 2000);
+  };
+
+  const handleShopAgain = () => {
+    router.push('/produk');
   };
 
   if (step === 3) {
@@ -83,7 +119,7 @@ const CheckoutPage = () => {
             Terima kasih atas pembelian Anda. Pesanan sedang diproses oleh pengrajin kami.
           </p>
 
-          <div className="bg-linear-to-br from-purple-50 to-pink-50 rounded-2xl p-6 mb-8 border border-purple-200">
+          <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 mb-8 border border-purple-200">
             <div className="flex items-center justify-center gap-3 mb-3">
               <Sparkles className="text-purple-600" size={32} />
               <h3 className="text-xl font-bold text-stone-800">NFT Certificate Minted!</h3>
@@ -117,14 +153,14 @@ const CheckoutPage = () => {
             </div>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-col sm:flex-row">
             <button 
-              onClick={() => window.location.reload()}
+              onClick={handleShopAgain}
               className="flex-1 bg-white text-amber-800 border-2 border-amber-800 px-6 py-3 rounded-full font-bold hover:bg-amber-50 transition"
             >
               Belanja Lagi
             </button>
-            <button className="flex-1 bg-linear-to-r from-amber-800 to-amber-900 text-white px-6 py-3 rounded-full font-bold hover:shadow-xl transition">
+            <button className="flex-1 bg-gradient-to-r from-amber-800 to-amber-900 text-white px-6 py-3 rounded-full font-bold hover:shadow-xl transition">
               Lacak Pesanan
             </button>
           </div>
@@ -133,8 +169,28 @@ const CheckoutPage = () => {
     );
   }
 
+  if (cartItems.length === 0 && step !== 3) {
+    return (
+      <div className="min-h-screen bg-amber-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 text-center">
+          <ShoppingBag size={64} className="text-stone-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-stone-800 mb-4">Keranjang Kosong</h2>
+          <p className="text-stone-600 mb-6">Silakan tambahkan produk ke keranjang terlebih dahulu.</p>
+          <button 
+            onClick={() => router.push('/produk')}
+            className="bg-amber-600 text-white px-6 py-3 rounded-full hover:bg-amber-700 transition"
+          >
+            Jelajahi Produk
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-amber-50">
+      <Navbar />
+      
       {/* Header */}
       <div className="bg-white border-b border-stone-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -290,7 +346,7 @@ const CheckoutPage = () => {
 
                 <button
                   type="submit"
-                  className="w-full mt-6 bg-linear-to-r from-amber-800 to-amber-900 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl transition text-lg"
+                  className="w-full mt-6 bg-gradient-to-r from-amber-800 to-amber-900 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl transition text-lg"
                 >
                   Lanjut ke Pembayaran
                 </button>
@@ -330,7 +386,7 @@ const CheckoutPage = () => {
 
                 <button
                   onClick={handlePayment}
-                  className="w-full bg-linear-to-r from-amber-800 to-amber-900 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl transition text-lg"
+                  className="w-full bg-gradient-to-r from-amber-800 to-amber-900 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl transition text-lg"
                 >
                   Bayar Sekarang - {formatPrice(total)}
                 </button>
