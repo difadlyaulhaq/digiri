@@ -493,10 +493,12 @@ const featuredProducts = products.slice(0, 6).map(product => ({
               <p className="text-sm lg:text-base text-stone-600 mb-6 leading-relaxed">
                 Rasakan sensasi membatik secara virtual! Ikuti pola tradisional dan pelajari filosofi di balik setiap goresan untuk melestarikan warisan budaya.
               </p>
+              <Link href="/mencanting" passHref>
               <button className="text-amber-800 font-semibold flex items-center gap-2 hover:gap-4 transition-all group">
                 Main Sekarang 
                 <ChevronRight size={20} className="group-hover:animate-bounce" />
               </button>
+            </Link>
             </div>
 
             {/* Game 2 */}
@@ -512,10 +514,12 @@ const featuredProducts = products.slice(0, 6).map(product => ({
               <p className="text-sm lg:text-base text-stone-600 mb-6 leading-relaxed">
                 Uji pengetahuan Anda tentang batik! Kompetisi real-time dengan sistem leaderboard yang dinamis.
               </p>
-              <button className="text-blue-800 font-semibold flex items-center gap-2 hover:gap-4 transition-all group">
+            <Link href="/kuis" passHref>
+                <button className="text-blue-800 font-semibold flex items-center gap-2 hover:gap-4 transition-all group">
                 Ikut Kuis 
                 <ChevronRight size={20} className="group-hover:animate-bounce" />
               </button>
+            </Link>
             </div>
 
             {/* AI Insight */}
@@ -531,10 +535,12 @@ const featuredProducts = products.slice(0, 6).map(product => ({
               <p className="text-sm lg:text-base text-stone-600 mb-6 leading-relaxed">
                 Dapatkan rekomendasi batik personal dari AI yang memahami filosofi dan kecocokan untuk Anda.
               </p>
-              <button className="text-purple-700 font-semibold flex items-center gap-2 hover:gap-4 transition-all group">
+              <Link href="/ai" passHref>
+                            <button className="text-purple-700 font-semibold flex items-center gap-2 hover:gap-4 transition-all group">
                 Tanya AI 
                 <ChevronRight size={20} className="group-hover:animate-bounce" />
               </button>
+            </Link>
             </div>
           </div>
         </div>

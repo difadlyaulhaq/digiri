@@ -4,6 +4,7 @@ import { ShoppingBag, MapPin, User, Mail, Phone, CreditCard, Shield, Award, Chec
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getCartItems, clearCart } from '@/utils/cartUtils';
+import { createOrder } from '@/utils/orderUtils';
 
 interface CartItem {
   id: number;
@@ -88,16 +89,35 @@ const CheckoutPage = () => {
   };
 
   const handlePayment = async () => {
-    // Simulate Midtrans Snap payment
-    alert('Opening Midtrans Payment Gateway...\n\nIn production, this will trigger:\n- POST /payment/initiate\n- Get snap_token\n- window.snap.pay(snap_token)');
-    
-    // Simulate success
-    setTimeout(async () => {
-      setStep(3);
-      // Clear cart after successful payment using cartUtils
+  // Simulate Midtrans Snap payment
+  alert('Opening Midtrans Payment Gateway...\n\nIn production, this will trigger:\n- POST /payment/initiate\n- Get snap_token\n- window.snap.pay(snap_token)');
+  
+  // Simulate success
+  setTimeout(async () => {
+    try {
+      // Create order first
+      const nftTransactionHash = "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEB5";
+      
+      const order = await createOrder(
+        cartItems,
+        formData,
+        subtotal,
+        shipping,
+        nftFee,
+        total,
+        nftTransactionHash
+      );
+
+      // Only clear cart after successful order creation
       await clearCart();
-    }, 2000);
-  };
+      
+      setStep(3);
+    } catch (error) {
+      console.error('Error creating order:', error);
+      alert('Terjadi kesalahan saat membuat pesanan. Silakan coba lagi.');
+    }
+  }, 2000);
+};
 
   const handleShopAgain = () => {
     router.push('/produk');
@@ -153,6 +173,7 @@ const CheckoutPage = () => {
             </div>
           </div>
 
+          // Di dalam step 3, tambahkan button untuk melihat order
           <div className="flex gap-4 flex-col sm:flex-row">
             <button 
               onClick={handleShopAgain}
@@ -160,8 +181,11 @@ const CheckoutPage = () => {
             >
               Belanja Lagi
             </button>
-            <button className="flex-1 bg-gradient-to-r from-amber-800 to-amber-900 text-white px-6 py-3 rounded-full font-bold hover:shadow-xl transition">
-              Lacak Pesanan
+            <button 
+              onClick={() => router.push('/orders')}
+              className="flex-1 bg-gradient-to-r from-amber-800 to-amber-900 text-white px-6 py-3 rounded-full font-bold hover:shadow-xl transition"
+            >
+              Lihat Pesanan
             </button>
           </div>
         </div>
