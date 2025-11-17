@@ -597,57 +597,61 @@ const featuredProducts = products.slice(0, 6).map(product => ({
       {/* Phygital Banner with Batik Pattern */}
       {/* PERBAIKAN: bg-linear-to-r -> bg-gradient-to-r */}
       <section id="ai" className="py-16 lg:py-24 px-4 bg-gradient-to-r from-purple-800 via-purple-900 to-pink-900 relative overflow-hidden">
-        {/* Animated Batik Pattern */}
-        <div 
-          className="absolute inset-0 opacity-10 animate-slide-up"
-          style={{
-            backgroundImage: `url('https://cdn.pixabay.com/photo/2020/11/29/10/41/batik-5787939_1280.jpg')`,
-            backgroundSize: '200px 200px',
-            backgroundRepeat: 'repeat',
-          }}
+  {/* Animated Batik Pattern */}
+  <div 
+    className="absolute inset-0 opacity-10 animate-slide-up"
+    style={{
+      backgroundImage: `url('https://cdn.pixabay.com/photo/2020/11/29/10/41/batik-5787939_1280.jpg')`,
+      backgroundSize: '200px 200px',
+      backgroundRepeat: 'repeat',
+    }}
+  />
+  
+  <div className="max-w-5xl mx-auto text-center text-white relative z-10">
+    <div className="inline-block bg-purple-700/30 backdrop-blur-md px-4 py-2 rounded-full text-sm font-bold mb-6 border border-purple-500/30">
+      ✨ AI-Powered Recommendations
+    </div>
+    <h2 className="text-3xl sm:text-4xl lg:text-6xl font-bold mb-6 leading-tight">
+      AI Batik Insight
+    </h2>
+    <p className="text-lg sm:text-xl lg:text-2xl mb-10 opacity-95 max-w-3xl mx-auto leading-relaxed">
+      Bingung memilih motif batik? Tanyakan kepada <span className="font-bold text-purple-300">AI kami</span> untuk mendapatkan rekomendasi berdasarkan kepribadian, acara, dan preferensi Anda
+    </p>
+    
+    <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 lg:p-12 mb-10 border border-white/20">
+      <div className="flex flex-col md:flex-row items-center gap-4">
+        <input 
+          type="text"
+          placeholder="Contoh: Saya butuh batik untuk acara formal..."
+          className="flex-1 bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder-white/70 px-6 py-4 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-400 text-base w-full"
+          readOnly
         />
-        
-        <div className="max-w-5xl mx-auto text-center text-white relative z-10">
-          <div className="inline-block bg-purple-700/30 backdrop-blur-md px-4 py-2 rounded-full text-sm font-bold mb-6 border border-purple-500/30">
-            ✨ AI-Powered Recommendations
-          </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-6xl font-bold mb-6 leading-tight">
-            AI Batik Insight
-          </h2>
-          <p className="text-lg sm:text-xl lg:text-2xl mb-10 opacity-95 max-w-3xl mx-auto leading-relaxed">
-            Bingung memilih motif batik? Tanyakan kepada <span className="font-bold text-purple-300">AI kami</span> untuk mendapatkan rekomendasi berdasarkan kepribadian, acara, dan preferensi Anda
-          </p>
-          
-          <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 lg:p-12 mb-10 border border-white/20">
-            <div className="flex flex-col md:flex-row items-center gap-4">
-              <input 
-                type="text"
-                placeholder="Contoh: Saya butuh batik untuk acara formal..."
-                className="flex-1 bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder-white/70 px-6 py-4 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-400 text-base w-full"
-              />
-              <button className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl transition transform hover:scale-105 whitespace-nowrap">
-                <Sparkles className="inline w-5 h-5 mr-2" />
-                Tanya AI
-              </button>
-            </div>
-          </div>
+        <button 
+          onClick={() => window.location.href = '/ai'}
+          className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl transition transform hover:scale-105 whitespace-nowrap"
+        >
+          <Sparkles className="inline w-5 h-5 mr-2" />
+          Tanya AI
+        </button>
+      </div>
+    </div>
 
-          <div className="grid sm:grid-cols-3 gap-4 text-sm">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <p className="font-semibold mb-1">🎭 Untuk Acara Formal</p>
-              <p className="text-white/80 text-xs">Rekomendasi motif klasik elegan</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <p className="font-semibold mb-1">👔 Untuk Bekerja</p>
-              <p className="text-white/80 text-xs">Motif modern profesional</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <p className="font-semibold mb-1">🎉 Untuk Casual</p>
-              <p className="text-white/80 text-xs">Motif trendy dan fresh</p>
-            </div>
-          </div>
-        </div>
-      </section>
+    <div className="grid sm:grid-cols-3 gap-4 text-sm">
+      <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+        <p className="font-semibold mb-1">🎭 Untuk Acara Formal</p>
+        <p className="text-white/80 text-xs">Rekomendasi motif klasik elegan</p>
+      </div>
+      <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+        <p className="font-semibold mb-1">👔 Untuk Bekerja</p>
+        <p className="text-white/80 text-xs">Motif modern profesional</p>
+      </div>
+      <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+        <p className="font-semibold mb-1">🎉 Untuk Casual</p>
+        <p className="text-white/80 text-xs">Motif trendy dan fresh</p>
+      </div>
+    </div>
+  </div>
+</section>
 
       {/* Featured Products Grid */}
       <section id="products" className="py-16 lg:py-24 px-4 bg-amber-50 relative">

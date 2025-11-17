@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import { Menu, X, Calendar, ShoppingCart, ShoppingBag } from 'lucide-react';
+import { Menu, X, Calendar, ShoppingCart, ShoppingBag, Sparkles } from 'lucide-react';
 import { getCartItemCount } from '@/utils/cartUtils';
 
 const Navbar = () => {
@@ -56,7 +56,28 @@ const Navbar = () => {
     }
   };
 
-  // Navigation items without icons (text only)
+  // Handle AI Assistant navigation specifically
+  const handleAIClick = () => {
+    if (isHomePage) {
+      // If on home page, scroll to AI section
+      const aiSection = document.getElementById('ai');
+      if (aiSection) {
+        aiSection.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start' 
+        });
+      }
+    } else {
+      // If on other page, navigate to AI chat page
+      router.push('/ai');
+    }
+    
+    if (menuOpen) {
+      setMenuOpen(false);
+    }
+  };
+
+  // Navigation items
   const navItems = [
     { id: 'home', label: 'Beranda', href: '/' },
     { id: 'desa-wisata', label: 'Desa Wisata', href: null },
@@ -71,18 +92,18 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16 lg:h-20">
           {/* Logo */}
           <div className="flex items-center space-x-3">
-        <Link href="/" className="cursor-pointer">
-          <div className="relative w-40 h-30"> 
-            <Image 
-              src="/logo.png"
-              alt="Logo"
-              fill  
-              className="object-contain"
-              priority
-            />
+            <Link href="/" className="cursor-pointer">
+              <div className="relative w-40 h-30"> 
+                <Image 
+                  src="/logo.png"
+                  alt="Logo"
+                  fill  
+                  className="object-contain"
+                  priority
+                />
+              </div>
+            </Link>
           </div>
-        </Link>
-      </div>
           
           {/* Desktop Menu */}
           <div className="hidden lg:flex space-x-8 items-center">
@@ -92,7 +113,9 @@ const Navbar = () => {
                   <Link 
                     key={item.id}
                     href={item.href}
-                    className="text-stone-700 hover:text-amber-800 transition font-medium px-3 py-2 rounded-lg hover:bg-amber-50"
+                    className={`text-stone-700 hover:text-amber-800 transition font-medium px-3 py-2 rounded-lg hover:bg-amber-50 ${
+                      router.pathname === item.href ? 'text-amber-800 bg-amber-50' : ''
+                    }`}
                   >
                     {item.label}
                   </Link>
@@ -109,6 +132,15 @@ const Navbar = () => {
                 );
               }
             })}
+
+            {/* AI Assistant Button */}
+            <button
+              onClick={handleAIClick}
+              className="flex items-center gap-2 text-stone-700 hover:text-purple-600 transition font-medium px-3 py-2 rounded-lg hover:bg-purple-50"
+            >
+              <Sparkles size={18} className="text-purple-500" />
+              AI Assistant
+            </button>
 
             {/* Booking & Cart Section */}
             <div className="flex items-center gap-4 ml-4 pl-4 border-l border-stone-200">
@@ -167,7 +199,9 @@ const Navbar = () => {
                   <Link 
                     key={item.id}
                     href={item.href}
-                    className="block py-3 text-stone-700 hover:text-amber-800 hover:bg-amber-50 rounded-lg px-4 transition font-medium"
+                    className={`block py-3 text-stone-700 hover:text-amber-800 hover:bg-amber-50 rounded-lg px-4 transition font-medium ${
+                      router.pathname === item.href ? 'text-amber-800 bg-amber-50' : ''
+                    }`}
                     onClick={() => setMenuOpen(false)}
                   >
                     {item.label}
@@ -185,6 +219,15 @@ const Navbar = () => {
                 );
               }
             })}
+
+            {/* AI Assistant for Mobile */}
+            <button
+              onClick={handleAIClick}
+              className="flex items-center gap-3 py-3 text-stone-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg px-4 transition font-medium w-full text-left"
+            >
+              <Sparkles size={20} className="text-purple-500" />
+              AI Assistant
+            </button>
 
             {/* Separator */}
             <div className="border-t border-stone-200 pt-2"></div>
