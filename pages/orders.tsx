@@ -1,7 +1,10 @@
-// pages/orders.tsx - tambahkan error handling
+// pages/orders.tsx - dengan status pembayaran Midtrans
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { ShoppingBag, MapPin, Clock, CheckCircle, Truck, Package, AlertCircle } from 'lucide-react';
+import { 
+  ShoppingBag, MapPin, Clock, CheckCircle, Truck, Package, 
+  AlertCircle, CreditCard, Wallet, QrCode, CreditCardIcon, Smartphone 
+} from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getOrdersByGuestId } from '@/utils/orderUtils';
@@ -47,7 +50,9 @@ const OrdersPage = () => {
     return new Date(dateString).toLocaleDateString('id-ID', {
       day: 'numeric',
       month: 'long',
-      year: 'numeric'
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
@@ -75,6 +80,82 @@ const OrdersPage = () => {
       case 'cancelled': return 'Dibatalkan';
       default: return 'Menunggu Pembayaran';
     }
+  };
+
+  const getPaymentMethodIcon = (method?: string) => {
+    if (!method) return <CreditCard size={16} />;
+    
+    switch (method.toLowerCase()) {
+      case 'gopay':
+        return <Wallet className="text-green-600" size={16} />;
+      case 'qris':
+        return <QrCode className="text-purple-600" size={16} />;
+      case 'bank_transfer':
+      case 'bca':
+      case 'bni':
+      case 'bri':
+      case 'mandiri':
+        return <CreditCardIcon className="text-blue-600" size={16} />;
+      case 'credit_card':
+        return <CreditCard className="text-orange-600" size={16} />;
+      case 'shopeepay':
+      case 'dana':
+      case 'ovo':
+        return <Smartphone className="text-pink-600" size={16} />;
+      default:
+        return <CreditCard size={16} />;
+    }
+  };
+
+  const getPaymentMethodText = (method?: string) => {
+    if (!method) return 'Midtrans';
+    
+    switch (method.toLowerCase()) {
+      case 'gopay': return 'GoPay';
+      case 'qris': return 'QRIS';
+      case 'bank_transfer': return 'Transfer Bank';
+      case 'bca': return 'BCA Transfer';
+      case 'bni': return 'BNI Transfer';
+      case 'bri': return 'BRI Transfer';
+      case 'mandiri': return 'Mandiri Transfer';
+      case 'credit_card': return 'Kartu Kredit';
+      case 'shopeepay': return 'ShopeePay';
+      case 'dana': return 'DANA';
+      case 'ovo': return 'OVO';
+      default: return method;
+    }
+  };
+
+  const getPaymentStatus = (order: Order) => {
+    // Jika order status adalah 'paid', anggap pembayaran berhasil
+    if (order.status === 'paid') {
+      return { status: 'success', text: 'Berhasil', color: 'text-green-600' };
+    }
+    
+    // Jika ada paymentStatus dari Midtrans
+    if (order.paymentStatus) {
+      switch (order.paymentStatus) {
+        case 'settlement':
+          return { status: 'success', text: 'Berhasil', color: 'text-green-600' };
+        case 'pending':
+          return { status: 'pending', text: 'Menunggu', color: 'text-yellow-600' };
+        case 'capture':
+          return { status: 'success', text: 'Terkonfirmasi', color: 'text-green-600' };
+        case 'deny':
+          return { status: 'failed', text: 'Ditolak', color: 'text-red-600' };
+        case 'cancel':
+          return { status: 'failed', text: 'Dibatalkan', color: 'text-red-600' };
+        case 'expire':
+          return { status: 'failed', text: 'Kadaluarsa', color: 'text-red-600' };
+        case 'failure':
+          return { status: 'failed', text: 'Gagal', color: 'text-red-600' };
+        default:
+          return { status: 'pending', text: 'Menunggu', color: 'text-yellow-600' };
+      }
+    }
+    
+    // Default berdasarkan order status
+    return { status: 'pending', text: 'Menunggu', color: 'text-yellow-600' };
   };
 
   if (loading) {
@@ -139,116 +220,174 @@ const OrdersPage = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            {orders.map((order) => (
-              <div key={order.orderId} className="bg-white rounded-3xl shadow-lg p-6">
-                {/* Order Header */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-                  <div>
-                    <h3 className="font-bold text-stone-800 text-lg">
-                      Order ID: {order.orderId}
-                    </h3>
-                    <p className="text-stone-600 text-sm">
-                      {formatDate(order.createdAt)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 mt-2 sm:mt-0">
-                    {getStatusIcon(order.status)}
-                    <span className={`font-semibold ${
-                      order.status === 'paid' || order.status === 'delivered' 
-                        ? 'text-green-600' 
-                        : order.status === 'processing' 
-                        ? 'text-amber-600'
-                        : order.status === 'shipped'
-                        ? 'text-blue-600'
-                        : 'text-gray-600'
-                    }`}>
-                      {getStatusText(order.status)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Order Items */}
-                <div className="border-t border-stone-200 pt-4 mb-4">
-                  {order.items.map((item, index) => (
-                    <div key={index} className="flex gap-4 mb-4 last:mb-0">
-                      <img 
-                        src={item.image}
-                        alt={item.name}
-                        className="w-16 h-16 object-cover rounded-xl"
-                      />
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-stone-800">{item.name}</h4>
-                        <p className="text-sm text-stone-600">
-                          {item.size} • {item.color} • Qty: {item.quantity}
-                        </p>
-                        <p className="font-bold text-amber-700 mt-1">
-                          {formatPrice(item.price)}
-                        </p>
-                      </div>
+            {orders.map((order) => {
+              const paymentStatus = getPaymentStatus(order);
+              
+              return (
+                <div key={order.orderId} className="bg-white rounded-3xl shadow-lg p-6">
+                  {/* Order Header */}
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                    <div>
+                      <h3 className="font-bold text-stone-800 text-lg">
+                        Order ID: {order.orderId}
+                      </h3>
+                      <p className="text-stone-600 text-sm">
+                        {formatDate(order.createdAt)}
+                      </p>
                     </div>
-                  ))}
-                </div>
-
-                {/* Order Summary */}
-                <div className="border-t border-stone-200 pt-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-stone-600">Subtotal</span>
-                    <span className="font-semibold">{formatPrice(order.subtotal)}</span>
-                  </div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-stone-600">Ongkos Kirim</span>
-                    <span className="font-semibold">{formatPrice(order.shipping)}</span>
-                  </div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-stone-600">NFT Certificate</span>
-                    <span className="font-semibold text-green-600">GRATIS</span>
-                  </div>
-                  <div className="flex justify-between items-center border-t border-stone-200 pt-2">
-                    <span className="font-bold text-stone-800">Total</span>
-                    <span className="font-bold text-amber-700 text-lg">
-                      {formatPrice(order.total)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Shipping Address */}
-                <div className="border-t border-stone-200 pt-4 mt-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <MapPin size={16} className="text-stone-600" />
-                    <h4 className="font-semibold text-stone-800">Alamat Pengiriman</h4>
-                  </div>
-                  <p className="text-stone-600 text-sm">
-                    {order.shippingAddress.name}<br />
-                    {order.shippingAddress.address}<br />
-                    {order.shippingAddress.city}, {order.shippingAddress.province} {order.shippingAddress.postalCode}<br />
-                    Telp: {order.shippingAddress.phone}
-                  </p>
-                </div>
-
-                {/* NFT Info */}
-                {order.nftTransactionHash && (
-                  <div className="border-t border-stone-200 pt-4 mt-4">
-                    <h4 className="font-semibold text-stone-800 mb-2">NFT Certificate</h4>
-                    <p className="text-sm text-stone-600 mb-1">Transaction Hash:</p>
-                    <p className="font-mono text-xs text-purple-600 break-all">
-                      {order.nftTransactionHash}
-                    </p>
-                  </div>
-                )}
-
-                {/* Estimated Delivery */}
-                {order.estimatedDelivery && (
-                  <div className="border-t border-stone-200 pt-4 mt-4">
-                    <div className="flex items-center gap-2">
-                      <Clock size={16} className="text-stone-600" />
-                      <span className="text-sm text-stone-600">
-                        Estimasi Pengiriman: {formatDate(order.estimatedDelivery)}
+                    <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                      {getStatusIcon(order.status)}
+                      <span className={`font-semibold ${
+                        order.status === 'paid' || order.status === 'delivered' 
+                          ? 'text-green-600' 
+                          : order.status === 'processing' 
+                          ? 'text-amber-600'
+                          : order.status === 'shipped'
+                          ? 'text-blue-600'
+                          : 'text-gray-600'
+                      }`}>
+                        {getStatusText(order.status)}
                       </span>
                     </div>
                   </div>
-                )}
-              </div>
-            ))}
+
+                  {/* Payment Information */}
+                  <div className="bg-gray-50 rounded-xl p-4 mb-4">
+                    <h4 className="font-semibold text-stone-800 mb-2">Informasi Pembayaran</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="text-stone-600">Status:</span>
+                        <span className={`font-semibold ${paymentStatus.color}`}>
+                          {paymentStatus.text}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-stone-600">Metode:</span>
+                        <div className="flex items-center gap-1">
+                          {getPaymentMethodIcon(order.paymentMethod)}
+                          <span className="font-semibold">
+                            {getPaymentMethodText(order.paymentMethod)}
+                          </span>
+                        </div>
+                      </div>
+                      {order.paymentMethod && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-stone-600">Provider:</span>
+                          <span className="font-semibold">Midtrans</span>
+                        </div>
+                      )}
+                      {order.transactionId && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-stone-600">ID Transaksi:</span>
+                          <span className="font-mono text-xs">{order.transactionId}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Order Items */}
+                  <div className="border-t border-stone-200 pt-4 mb-4">
+                    {order.items.map((item, index) => (
+                      <div key={index} className="flex gap-4 mb-4 last:mb-0">
+                        <img 
+                          src={item.image}
+                          alt={item.name}
+                          className="w-16 h-16 object-cover rounded-xl"
+                        />
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-stone-800">{item.name}</h4>
+                          <p className="text-sm text-stone-600">
+                            {item.size} • {item.color} • Qty: {item.quantity}
+                          </p>
+                          <p className="font-bold text-amber-700 mt-1">
+                            {formatPrice(item.price)}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Order Summary */}
+                  <div className="border-t border-stone-200 pt-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-stone-600">Subtotal</span>
+                      <span className="font-semibold">{formatPrice(order.subtotal)}</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-stone-600">Ongkos Kirim</span>
+                      <span className="font-semibold">{formatPrice(order.shipping)}</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-stone-600">NFT Certificate</span>
+                      <span className="font-semibold text-green-600">GRATIS</span>
+                    </div>
+                    <div className="flex justify-between items-center border-t border-stone-200 pt-2">
+                      <span className="font-bold text-stone-800">Total</span>
+                      <span className="font-bold text-amber-700 text-lg">
+                        {formatPrice(order.total)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Shipping Address */}
+                  <div className="border-t border-stone-200 pt-4 mt-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MapPin size={16} className="text-stone-600" />
+                      <h4 className="font-semibold text-stone-800">Alamat Pengiriman</h4>
+                    </div>
+                    <p className="text-stone-600 text-sm">
+                      {order.shippingAddress.name}<br />
+                      {order.shippingAddress.address}<br />
+                      {order.shippingAddress.city}, {order.shippingAddress.province} {order.shippingAddress.postalCode}<br />
+                      Telp: {order.shippingAddress.phone}
+                    </p>
+                  </div>
+
+                  {/* NFT Info */}
+                  {order.nftTransactionHash && (
+                    <div className="border-t border-stone-200 pt-4 mt-4">
+                      <h4 className="font-semibold text-stone-800 mb-2">NFT Certificate</h4>
+                      <p className="text-sm text-stone-600 mb-1">Transaction Hash:</p>
+                      <p className="font-mono text-xs text-purple-600 break-all">
+                        {order.nftTransactionHash}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Estimated Delivery */}
+                  {order.estimatedDelivery && (
+                    <div className="border-t border-stone-200 pt-4 mt-4">
+                      <div className="flex items-center gap-2">
+                        <Clock size={16} className="text-stone-600" />
+                        <span className="text-sm text-stone-600">
+                          Estimasi Pengiriman: {formatDate(order.estimatedDelivery)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  {paymentStatus.status === 'pending' && (
+                    <div className="border-t border-stone-200 pt-4 mt-4">
+                      <div className="flex gap-3">
+                        <button 
+                          onClick={() => window.location.reload()}
+                          className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition text-sm"
+                        >
+                          Periksa Status
+                        </button>
+                        <button 
+                          onClick={() => router.push('/checkout')}
+                          className="bg-white text-amber-600 border border-amber-600 px-4 py-2 rounded-lg hover:bg-amber-50 transition text-sm"
+                        >
+                          Bayar Sekarang
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

@@ -4,7 +4,8 @@ import { ShoppingBag, MapPin, User, Mail, Phone, CreditCard, Shield, Award, Chec
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getCartItems, clearCart } from '@/utils/cartUtils';
-import { createOrder } from '@/utils/orderUtils';
+import { createOrder } from '@/utils/orderUtils'; 
+import MidtransScript from '@/components/MidtransScript';
 
 interface CartItem {
   id: number;
@@ -89,34 +90,109 @@ const CheckoutPage = () => {
   };
 
   const handlePayment = async () => {
-  // Simulate Midtrans Snap payment
-  alert('Opening Midtrans Payment Gateway...\n\nIn production, this will trigger:\n- POST /payment/initiate\n- Get snap_token\n- window.snap.pay(snap_token)');
-  
-  // Simulate success
-  setTimeout(async () => {
-    try {
-      // Create order first
-      const nftTransactionHash = "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEB5";
-      
-      const order = await createOrder(
-        cartItems,
-        formData,
-        subtotal,
-        shipping,
-        nftFee,
-        total,
-        nftTransactionHash
-      );
+  try {
+    // Generate order ID
+    const orderId = `GRLYO-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    
+    console.log('🔄 Memulai proses pembayaran Midtrans...');
 
-      // Only clear cart after successful order creation
-      await clearCart();
-      
-      setStep(3);
-    } catch (error) {
-      console.error('Error creating order:', error);
-      alert('Terjadi kesalahan saat membuat pesanan. Silakan coba lagi.');
+    // Prepare data for Midtrans - TAMBAHKAN shipping dan nftFee
+    const paymentData = {
+      orderId: orderId,
+      amount: total,
+      shipping: shipping, // TAMBAH INI
+      nftFee: nftFee,    // TAMBAH INI
+      customerDetails: {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        province: formData.province,
+        postalCode: formData.postalCode
+      },
+      items: cartItems.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        size: item.size,
+        color: item.color
+      }))
+    };
+
+    console.log('📦 Payment data:', {
+      orderId: paymentData.orderId,
+      amount: paymentData.amount,
+      shipping: paymentData.shipping,
+      nftFee: paymentData.nftFee,
+      items: paymentData.items,
+      itemsTotal: paymentData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    });
+
+    // Create payment transaction
+    const response = await fetch('/api/payment/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(paymentData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Gagal membuat transaksi pembayaran');
     }
-  }, 2000);
+
+    const paymentResult = await response.json();
+    
+    console.log('✅ Token Midtrans diterima:', paymentResult.token);
+
+    // Open Midtrans payment popup
+    if (typeof window !== 'undefined' && (window as any).snap) {
+      (window as any).snap.pay(paymentResult.token, {
+        onSuccess: async function(result: any) {
+          console.log('💰 Pembayaran berhasil:', result);
+          
+          // Create order in database
+          const nftTransactionHash = "0x" + Math.random().toString(16).substring(2, 42);
+          
+          const order = await createOrder(
+            cartItems,
+            formData,
+            subtotal,
+            shipping,
+            nftFee,
+            total,
+            nftTransactionHash
+          );
+
+          // Clear cart after successful payment
+          await clearCart();
+          
+          setStep(3);
+        },
+        onPending: function(result: any) {
+          console.log('⏳ Pembayaran pending:', result);
+          alert('Pembayaran Anda sedang diproses. Silakan selesaikan pembayaran Anda.');
+        },
+        onError: function(result: any) {
+          console.log('❌ Error pembayaran:', result);
+          alert('Terjadi kesalahan saat proses pembayaran. Silakan coba lagi.');
+        },
+        onClose: function() {
+          console.log('🔒 Popup pembayaran ditutup');
+          // User closed the popup without finishing the payment
+        }
+      });
+    } else {
+      throw new Error('Midtrans SDK tidak terload');
+    }
+
+  } catch (error: any) {
+    console.error('❌ Error dalam proses pembayaran:', error);
+    alert(`Gagal memproses pembayaran: ${error.message}`);
+  }
 };
 
   const handleShopAgain = () => {
@@ -213,7 +289,9 @@ const CheckoutPage = () => {
 
   return (
     <div className="min-h-screen bg-amber-50">
+      
       <Navbar />
+      <MidtransScript />
       
       {/* Header */}
       <div className="bg-white border-b border-stone-200">

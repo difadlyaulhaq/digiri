@@ -43,6 +43,12 @@ export interface Order {
   nftFee: number;
   total: number;
   nftTransactionHash?: string;
+  
+  // Tambahan field untuk Midtrans
+  paymentMethod?: string;
+  paymentStatus?: 'pending' | 'settlement' | 'capture' | 'deny' | 'cancel' | 'expire' | 'failure';
+  transactionId?: string;
+  
   createdAt: string;
   updatedAt: string;
   estimatedDelivery?: string;
@@ -64,7 +70,10 @@ export const createOrder = async (
   shipping: number,
   nftFee: number,
   total: number,
-  nftTransactionHash?: string
+  nftTransactionHash?: string,
+  paymentMethod?: string,
+  paymentStatus?: string,
+  transactionId?: string
 ): Promise<Order> => {
   try {
     const guestId = localStorage.getItem('guestId') || 'unknown';
@@ -75,12 +84,15 @@ export const createOrder = async (
       guestId,
       items,
       shippingAddress,
-      status: 'paid',
+      status: paymentStatus === 'settlement' || paymentStatus === 'capture' ? 'paid' : 'pending',
       subtotal,
       shipping,
       nftFee,
       total,
       nftTransactionHash,
+      paymentMethod,
+      paymentStatus: paymentStatus as any,
+      transactionId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       estimatedDelivery: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
