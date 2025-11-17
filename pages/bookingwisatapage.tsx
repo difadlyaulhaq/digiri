@@ -126,7 +126,7 @@ const BookingWisataPage = () => {
     <div className="min-h-screen bg-amber-50">
       <Navbar />
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-600 to-emerald-700 text-white">
+      <div className="bg-linear-to-r from-green-600 to-emerald-700 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
           <div className="text-center">
             <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-bold mb-4">
@@ -166,7 +166,7 @@ const BookingWisataPage = () => {
                       }`}
                     >
                       {pkg?.popular && (
-                        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-3 py-1 rounded-full text-xs font-bold">
+                        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-linear-to-r from-amber-500 to-amber-600 text-white px-3 py-1 rounded-full text-xs font-bold">
                           🔥 POPULER
                         </div>
                       )}
@@ -190,7 +190,7 @@ const BookingWisataPage = () => {
                   {/* PERBAIKAN: Tambahkan tipe 'string' dan 'number' pada parameter map */}
                   {packages[selectedPackage].features.map((feature: string, idx: number) => (
                     <div key={idx} className="flex items-start gap-2">
-                      <Check size={16} className="text-green-600 flex-shrink-0 mt-0.5" />
+                      <Check size={16} className="text-green-600  shrink-0 mt-0.5" />
                       <span className="text-sm text-green-800">{feature}</span>
                     </div>
                   ))}
@@ -400,22 +400,22 @@ const BookingWisataPage = () => {
 
               <div className="space-y-3 mb-6">
                 <div className="flex items-start gap-2 text-xs text-stone-600">
-                  <Check size={14} className="text-green-600 flex-shrink-0 mt-0.5" />
+                  <Check size={14} className="text-green-600  shrink-0 mt-0.5" />
                   <span>Free konsultasi & planning</span>
                 </div>
                 <div className="flex items-start gap-2 text-xs text-stone-600">
-                  <Check size={14} className="text-green-600 flex-shrink-0 mt-0.5" />
+                  <Check size={14} className="text-green-600  shrink-0 mt-0.5" />
                   <span>Pembayaran bisa dicicil untuk rombongan besar</span>
                 </div>
                 <div className="flex items-start gap-2 text-xs text-stone-600">
-                  <Check size={14} className="text-green-600 flex-shrink-0 mt-0.5" />
+                  <Check size={14} className="text-green-600  shrink-0 mt-0.5" />
                   <span>Dapat sertifikat resmi</span>
                 </div>
               </div>
 
               <button
                 onClick={handleSubmit}
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-700 text-white px-6 py-4 rounded-full font-bold hover:shadow-xl transition text-lg flex items-center justify-center gap-2"
+                className="w-full bg-linear-to-r from-green-600 to-emerald-700 text-white px-6 py-4 rounded-full font-bold hover:shadow-xl transition text-lg flex items-center justify-center gap-2"
               >
                 <span className="text-2xl">💬</span>
                 Kirim via WhatsApp
@@ -429,7 +429,7 @@ const BookingWisataPage = () => {
         </div>
 
         {/* Info Banner */}
-        <div className="mt-12 bg-gradient-to-br from-amber-100 to-orange-100 rounded-3xl p-8 lg:p-12 text-center">
+        <div className="mt-12 bg-linear-to-br from-amber-100 to-orange-100 rounded-3xl p-8 lg:p-12 text-center">
           <Award className="w-16 h-16 text-amber-700 mx-auto mb-4" />
           <h3 className="text-2xl lg:text-3xl font-bold text-stone-800 mb-4">
             Harga Spesial untuk Institusi Pendidikan
