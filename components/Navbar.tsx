@@ -145,7 +145,7 @@ const Navbar = () => {
             {/* Booking & Cart Section */}
             <div className="flex items-center gap-4 ml-4 pl-4 border-l border-stone-200">
               <Link href="/bookingwisatapage">
-                <button className="bg-gradient-to-r from-amber-800 to-amber-900 text-amber-50 px-6 py-2.5 rounded-full font-semibold hover:shadow-xl transition transform hover:scale-105">
+                <button className="bg-linear-to-r from-amber-800 to-amber-900 text-amber-50 px-6 py-2.5 rounded-full font-semibold hover:shadow-xl transition transform hover:scale-105">
                   Booking Paket
                 </button>
               </Link>
@@ -248,7 +248,7 @@ const Navbar = () => {
               className="block w-full"
               onClick={() => setMenuOpen(false)}
             >
-              <button className="w-full bg-gradient-to-r from-amber-800 to-amber-900 text-amber-50 px-6 py-3 rounded-full font-semibold">
+              <button className="w-full bg-linear-to-r from-amber-800 to-amber-900 text-amber-50 px-6 py-3 rounded-full font-semibold">
                 Booking Paket
               </button>
             </Link>

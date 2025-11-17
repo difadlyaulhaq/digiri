@@ -110,7 +110,7 @@ const AIChatPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
+    <div className="min-h-screen bg-linear-to-br from-purple-50 to-pink-50">
       <Navbar />
       
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -124,7 +124,7 @@ const AIChatPage = () => {
           </button>
           <div className="flex-1">
             <h1 className="text-3xl font-bold text-stone-800 flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-linear-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
                 <Sparkles className="text-white" size={24} />
               </div>
               AI Batik Assistant
@@ -173,7 +173,7 @@ const AIChatPage = () => {
                 {messages.map((message) => (
                   <div key={message.id} className={`flex gap-3 ${message.isUser ? 'justify-end' : 'justify-start'}`}>
                     {!message.isUser && (
-                      <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className="w-8 h-8 bg-linear-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center shrink-0">
                         <Bot size={16} className="text-white" />
                       </div>
                     )}
@@ -181,7 +181,7 @@ const AIChatPage = () => {
                     <div className={`max-w-[80%] ${message.isUser ? 'order-first' : ''}`}>
                       <div className={`rounded-2xl p-4 ${
                         message.isUser 
-                          ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white' 
+                          ? 'bg-linear-to-r from-amber-500 to-amber-600 text-white' 
                           : 'bg-stone-100 text-stone-800'
                       }`}>
                         <div className="whitespace-pre-wrap">{message.content}</div>
@@ -195,7 +195,7 @@ const AIChatPage = () => {
                     </div>
 
                     {message.isUser && (
-                      <div className="w-8 h-8 bg-stone-200 rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className="w-8 h-8 bg-stone-200 rounded-full flex items-center justify-center shrink-0">
                         <User size={16} className="text-stone-600" />
                       </div>
                     )}
@@ -204,7 +204,7 @@ const AIChatPage = () => {
                 
                 {isLoading && (
                   <div className="flex gap-3 justify-start">
-                    <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 bg-linear-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
                       <Bot size={16} className="text-white" />
                     </div>
                     <div className="bg-stone-100 rounded-2xl p-4">
@@ -232,7 +232,7 @@ const AIChatPage = () => {
                   <button
                     type="submit"
                     disabled={isLoading || !inputMessage.trim()}
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white w-12 h-12 rounded-full flex items-center justify-center hover:shadow-lg transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-linear-to-r from-purple-500 to-pink-500 text-white w-12 h-12 rounded-full flex items-center justify-center hover:shadow-lg transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Send size={20} />
                   </button>

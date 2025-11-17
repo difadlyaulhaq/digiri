@@ -113,7 +113,7 @@ const featuredProducts = products.slice(0, 6).map(product => ({
           <button 
             onClick={() => document.getElementById('games')?.scrollIntoView({ behavior: 'smooth' })}
             // PERBAIKAN: bg-linear-to-r -> bg-gradient-to-r
-            className="group relative bg-gradient-to-r from-amber-600 to-amber-700 text-white w-14 h-14 rounded-full shadow-2xl hover:shadow-amber-500/50 transition transform hover:scale-110 flex items-center justify-center"
+            className="group relative bg-linear-to-r from-amber-600 to-amber-700 text-white w-14 h-14 rounded-full shadow-2xl hover:shadow-amber-500/50 transition transform hover:scale-110 flex items-center justify-center"
           >
             <Gamepad2 size={24} />
             <span className="absolute right-16 bg-stone-800 text-white px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none">
@@ -124,7 +124,7 @@ const featuredProducts = products.slice(0, 6).map(product => ({
           <button 
             onClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })}
             // PERBAIKAN: bg-linear-to-r -> bg-gradient-to-r
-            className="group relative bg-gradient-to-r from-blue-600 to-blue-700 text-white w-14 h-14 rounded-full shadow-2xl hover:shadow-blue-500/50 transition transform hover:scale-110 flex items-center justify-center"
+            className="group relative bg-linear-to-r from-blue-600 to-blue-700 text-white w-14 h-14 rounded-full shadow-2xl hover:shadow-blue-500/50 transition transform hover:scale-110 flex items-center justify-center"
           >
             <ShoppingBag size={24} />
             <span className="absolute right-16 bg-stone-800 text-white px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none">
@@ -135,7 +135,7 @@ const featuredProducts = products.slice(0, 6).map(product => ({
           <button 
             onClick={() => document.getElementById('ai')?.scrollIntoView({ behavior: 'smooth' })}
             // PERBAIKAN: bg-linear-to-r -> bg-gradient-to-r
-            className="group relative bg-gradient-to-r from-purple-600 to-purple-700 text-white w-14 h-14 rounded-full shadow-2xl hover:shadow-purple-500/50 transition transform hover:scale-110 flex items-center justify-center animate-pulse"
+            className="group relative bg-linear-to-r from-purple-600 to-purple-700 text-white w-14 h-14 rounded-full shadow-2xl hover:shadow-purple-500/50 transition transform hover:scale-110 flex items-center justify-center animate-pulse"
           >
             <Sparkles size={24} />
             <span className="absolute right-16 bg-stone-800 text-white px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none">
@@ -146,7 +146,7 @@ const featuredProducts = products.slice(0, 6).map(product => ({
           <Link href="/bookingwisatapage" passHref>
             <button 
 
-              className="group relative bg-gradient-to-r from-green-600 to-emerald-700 text-white w-14 h-14 rounded-full shadow-2xl hover:shadow-green-500/50 transition transform hover:scale-110 flex items-center justify-center"
+              className="group relative bg-linear-to-r from-green-600 to-emerald-700 text-white w-14 h-14 rounded-full shadow-2xl hover:shadow-green-500/50 transition transform hover:scale-110 flex items-center justify-center"
             >
               <School size={24} />
               <span className="absolute right-16 bg-stone-800 text-white px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none">
@@ -156,7 +156,7 @@ const featuredProducts = products.slice(0, 6).map(product => ({
           </Link>
           <Link href="/keranjang" passHref>
           <button 
-            className="group relative bg-gradient-to-r from-red-600 to-red-700 text-white w-14 h-14 rounded-full shadow-2xl hover:shadow-red-500/50 transition transform hover:scale-110 flex items-center justify-center"
+            className="group relative bg-linear-to-r from-red-600 to-red-700 text-white w-14 h-14 rounded-full shadow-2xl hover:shadow-red-500/50 transition transform hover:scale-110 flex items-center justify-center"
           >
             <ShoppingBag size={24} />
             <span className="absolute right-16 bg-stone-800 text-white px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none">
@@ -194,7 +194,7 @@ const featuredProducts = products.slice(0, 6).map(product => ({
               <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold leading-tight">
                 <span className="block text-stone-800 mb-2">Desa Wisata</span>
                 {/* PERBAIKAN: bg-linear-to-r -> bg-gradient-to-r */}
-                <span className="block bg-gradient-to-r from-amber-700 via-amber-800 to-amber-900 bg-clip-text text-transparent">Batik Giriloyo</span>
+                <span className="block bg-linear-to-r from-amber-700 via-amber-800 to-amber-900 bg-clip-text text-transparent">Batik Giriloyo</span>
               </h1>
               <p className="text-base sm:text-lg lg:text-xl text-stone-600 leading-relaxed max-w-2xl mx-auto lg:mx-0">
                 Jelajahi warisan batik tulis UNESCO, booking paket eduwisata, bermain game interaktif, dan belanja batik autentik dengan NFT digital
@@ -204,7 +204,7 @@ const featuredProducts = products.slice(0, 6).map(product => ({
                 <Link href="/bookingwisatapage">
                   <button 
                     // PERBAIKAN: bg-linear-to-r -> bg-gradient-to-r
-                    className="bg-gradient-to-r from-amber-800 to-amber-900 text-amber-50 px-8 py-4 rounded-full font-semibold hover:shadow-2xl transform hover:scale-105 transition text-base lg:text-lg flex items-center justify-center gap-2"
+                    className="bg-linear-to-r from-amber-800 to-amber-900 text-amber-50 px-8 py-4 rounded-full font-semibold hover:shadow-2xl transform hover:scale-105 transition text-base lg:text-lg flex items-center justify-center gap-2"
                   >
                     <Calendar size={22} />
                     Booking Paket Wisata
@@ -240,7 +240,7 @@ const featuredProducts = products.slice(0, 6).map(product => ({
             <div className="flex-1 w-full max-w-md lg:max-w-xl relative">
               <div className="relative">
                 {/* PERBAIKAN: bg-linear-to-br -> bg-gradient-to-br */}
-                <div className="absolute -inset-4 bg-gradient-to-br from-amber-300 to-amber-500 rounded-3xl blur-3xl opacity-20 animate-pulse"></div>
+                <div className="absolute -inset-4 bg-linear-to-br from-amber-300 to-amber-500 rounded-3xl blur-3xl opacity-20 animate-pulse"></div>
                 <img 
                   src="/Muslimbatik.png" 
                   alt="Batik Model"
@@ -274,7 +274,7 @@ const featuredProducts = products.slice(0, 6).map(product => ({
 
       {/* Desa Wisata Highlight Section */}
       {/* PERBAIKAN: bg-linear-to-br -> bg-gradient-to-br */}
-      <section id="desa-wisata" className="py-16 lg:py-24 px-4 bg-gradient-to-br from-amber-100 to-orange-100 relative">
+      <section id="desa-wisata" className="py-16 lg:py-24 px-4 bg-linear-to-br from-amber-100 to-orange-100 relative">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 lg:mb-16">
             <h2 className="text-3xl lg:text-5xl font-bold text-stone-800 mb-4">
@@ -348,7 +348,7 @@ const featuredProducts = products.slice(0, 6).map(product => ({
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
                     <Mountain className="w-6 h-6 text-blue-700" />
                   </div>
                   <div>
@@ -681,7 +681,7 @@ const featuredProducts = products.slice(0, 6).map(product => ({
                   {/* PERBAIKAN: bg-linear-to-t -> bg-gradient-to-t */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition"></div>
                   {/* PERBAIKAN: bg-linear-to-r -> bg-gradient-to-r */}
-                  <div className="absolute top-4 right-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-3 py-1 rounded-full text-xs lg:text-sm font-bold shadow-lg flex items-center gap-1">
+                  <div className="absolute top-4 right-4 bg-linear-to-r from-amber-500 to-amber-600 text-white px-3 py-1 rounded-full text-xs lg:text-sm font-bold shadow-lg flex items-center gap-1">
                     <Award size={14} />
                     NFT
                   </div>
@@ -699,7 +699,7 @@ const featuredProducts = products.slice(0, 6).map(product => ({
                     <span className="text-xl lg:text-2xl font-bold text-amber-700">{product.price}</span>
                     {/* PERBAIKAN: Implementasi Routing */}
                     <Link href={`/produk/${product.slug}`} passHref>
-                      <button className="bg-gradient-to-r from-amber-800 to-amber-900 text-amber-50 px-4 lg:px-6 py-2 rounded-full font-semibold hover:shadow-lg transition transform hover:scale-105 text-sm lg:text-base">
+                      <button className="bg-linear-to-r from-amber-800 to-amber-900 text-amber-50 px-4 lg:px-6 py-2 rounded-full font-semibold hover:shadow-lg transition transform hover:scale-105 text-sm lg:text-base">
                         Beli Sekarang
                       </button>
                     </Link>
@@ -720,7 +720,7 @@ const featuredProducts = products.slice(0, 6).map(product => ({
 
           {/* Phygital Info */}
           {/* PERBAIKAN: bg-linear-to-r -> bg-gradient-to-r */}
-          <div className="mt-16 bg-gradient-to-r from-amber-800 via-amber-900 to-stone-900 rounded-3xl p-8 lg:p-12 text-center text-white">
+          <div className="mt-16 bg-linear-to-r from-amber-800 via-amber-900 to-stone-900 rounded-3xl p-8 lg:p-12 text-center text-white">
             <div className="flex flex-col sm:flex-row gap-6 lg:gap-8 justify-center items-center mb-8">
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 lg:p-8 hover:bg-white/20 transition transform hover:scale-105 w-full sm:w-auto border border-amber-500/20">
                 <div className="text-5xl lg:text-6xl mb-4">🎨</div>
