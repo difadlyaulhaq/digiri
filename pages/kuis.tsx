@@ -2,74 +2,15 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Clock, Trophy, Users, Star, Award, ChevronRight } from 'lucide-react';
+import { Clock, Trophy, Users, Star, Award, ChevronRight, User } from 'lucide-react';
 
 // Data pertanyaan kuis
-const quizQuestions = [
-  {
-    id: 1,
-    question: "Apa makna filosofi dari motif batik Kawung?",
-    options: [
-      "Kesempurnaan dan kemurnian",
-      "Kekuatan dan keberanian", 
-      "Kesejahteraan dan kemakmuran",
-      "Keselarasan dan keseimbangan"
-    ],
-    correctAnswer: 0,
-    timeLimit: 30
-  },
-  {
-    id: 2,
-    question: "Teknik membatik dengan canting disebut teknik...",
-    options: [
-      "Batik Tulis",
-      "Batik Cap",
-      "Batik Printing",
-      "Batik Kombinasi"
-    ],
-    correctAnswer: 0,
-    timeLimit: 20
-  },
-  {
-    id: 3,
-    question: "Warna sogan pada batik tradisional berasal dari...",
-    options: [
-      "Kulit pohon soga",
-      "Daun jati",
-      "Kunyit",
-      "Tanah liat"
-    ],
-    correctAnswer: 0,
-    timeLimit: 25
-  },
-  {
-    id: 4,
-    question: "Motif batik Parang melambangkan...",
-    options: [
-      "Kekuatan dan keteguhan",
-      "Keindahan alam",
-      "Kesuburan tanah",
-      "Kecerdasan pikiran"
-    ],
-    correctAnswer: 0,
-    timeLimit: 30
-  },
-  {
-    id: 5,
-    question: "Desa Giriloyo dikenal sebagai pusat batik...",
-    options: [
-      "Batik Tulis Yogyakarta",
-      "Batik Cap Pekalongan",
-      "Batik Printing Modern",
-      "Batik Sunda"
-    ],
-    correctAnswer: 0,
-    timeLimit: 20
-  }
-];
+import quizQuestions from '@/data/quizQuestions';
+import { addScoreToLeaderboard, getTopScores, LeaderboardEntry } from '@/lib/leaderboardService';
 
 const KuisGame = () => {
-  const [gameState, setGameState] = useState<'lobby' | 'playing' | 'finished'>('lobby');
+  const [gameState, setGameState] = useState<'lobby' | 'playing' | 'finished' | 'review' | 'levelComplete'>('lobby');
+  const [currentLevel, setCurrentLevel] = useState<'level1' | 'level2' | 'level3'>('level1');
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -80,6 +21,22 @@ const KuisGame = () => {
     { id: 3, name: 'Sari', score: 0, isYou: false },
     { id: 4, name: 'Rina', score: 0, isYou: false }
   ]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [userAnswers, setUserAnswers] = useState<number[]>([]);
+  const [playerName, setPlayerName] = useState('');
+  const [levelScores, setLevelScores] = useState({ level1: 0, level2: 0, level3: 0 });
+
+  // Load leaderboard
+  useEffect(() => {
+    const loadLeaderboard = async () => {
+      const topScores = await getTopScores(10);
+      setLeaderboard(topScores);
+    };
+    
+    if (gameState === 'lobby' || gameState === 'finished') {
+      loadLeaderboard();
+    }
+  }, [gameState]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -92,24 +49,46 @@ const KuisGame = () => {
   }, [gameState, timeLeft]);
 
   const startGame = () => {
+    if (!playerName.trim()) {
+      alert('Masukkan nama Anda terlebih dahulu!');
+      return;
+    }
+    
     setGameState('playing');
+    setCurrentLevel('level1');
     setCurrentQuestion(0);
     setScore(0);
-    setTimeLeft(quizQuestions[0].timeLimit);
+    setLevelScores({ level1: 0, level2: 0, level3: 0 });
+    setUserAnswers([]);
+    setTimeLeft(quizQuestions.level1[0].timeLimit);
     // Reset player scores
     setPlayers(players.map(p => ({ ...p, score: 0 })));
   };
 
-  const handleAnswerSelect = (answerIndex: number) => {
+  const startLevel = (level: 'level1' | 'level2' | 'level3') => {
+    setCurrentLevel(level);
+    setCurrentQuestion(0);
+    setTimeLeft(quizQuestions[level][0].timeLimit);
+    setSelectedAnswer(null);
+    setGameState('playing');
+  };
+
+  const handleAnswerSelect = async (answerIndex: number) => {
     if (selectedAnswer !== null) return;
 
     setSelectedAnswer(answerIndex);
+    const newUserAnswers = [...userAnswers, answerIndex];
+    setUserAnswers(newUserAnswers);
     
     // Check if answer is correct
-    const isCorrect = answerIndex === quizQuestions[currentQuestion].correctAnswer;
+    const isCorrect = answerIndex === quizQuestions[currentLevel][currentQuestion].correctAnswer;
     if (isCorrect) {
       const newScore = score + 100;
+      const newLevelScore = levelScores[currentLevel] + 100;
+      
       setScore(newScore);
+      setLevelScores(prev => ({ ...prev, [currentLevel]: newLevelScore }));
+      
       // Update player score
       setPlayers(players.map(p => 
         p.isYou ? { ...p, score: newScore } : { 
@@ -120,26 +99,43 @@ const KuisGame = () => {
     }
 
     // Move to next question after delay
-    setTimeout(() => {
-      if (currentQuestion < quizQuestions.length - 1) {
+    setTimeout(async () => {
+      if (currentQuestion < quizQuestions[currentLevel].length - 1) {
         setCurrentQuestion(currentQuestion + 1);
-        setTimeLeft(quizQuestions[currentQuestion + 1].timeLimit);
+        setTimeLeft(quizQuestions[currentLevel][currentQuestion + 1].timeLimit);
         setSelectedAnswer(null);
       } else {
-        setGameState('finished');
+        // Check if this is the last level
+        if (currentLevel === 'level3') {
+          // Simpan score ke leaderboard ketika kuis selesai
+          await addScoreToLeaderboard(playerName, score + (isCorrect ? 100 : 0));
+          setGameState('finished');
+        } else {
+          setGameState('levelComplete');
+        }
       }
     }, 2000);
   };
 
   const handleTimeUp = () => {
     setSelectedAnswer(-1); // Mark as no answer
-    setTimeout(() => {
-      if (currentQuestion < quizQuestions.length - 1) {
+    const newUserAnswers = [...userAnswers, -1];
+    setUserAnswers(newUserAnswers);
+    
+    setTimeout(async () => {
+      if (currentQuestion < quizQuestions[currentLevel].length - 1) {
         setCurrentQuestion(currentQuestion + 1);
-        setTimeLeft(quizQuestions[currentQuestion + 1].timeLimit);
+        setTimeLeft(quizQuestions[currentLevel][currentQuestion + 1].timeLimit);
         setSelectedAnswer(null);
       } else {
-        setGameState('finished');
+        // Check if this is the last level
+        if (currentLevel === 'level3') {
+          // Simpan score ke leaderboard ketika kuis selesai
+          await addScoreToLeaderboard(playerName, score);
+          setGameState('finished');
+        } else {
+          setGameState('levelComplete');
+        }
       }
     }, 2000);
   };
@@ -149,7 +145,7 @@ const KuisGame = () => {
       return "bg-white border-2 border-stone-200 hover:border-blue-500 hover:bg-blue-50";
     }
     
-    const isCorrect = index === quizQuestions[currentQuestion].correctAnswer;
+    const isCorrect = index === quizQuestions[currentLevel][currentQuestion].correctAnswer;
     const isSelected = index === selectedAnswer;
     
     if (isCorrect) {
@@ -159,6 +155,164 @@ const KuisGame = () => {
     } else {
       return "bg-stone-100 text-stone-400 border-stone-100";
     }
+  };
+
+  const showReview = () => {
+    setGameState('review');
+  };
+
+  const getCurrentQuestions = () => {
+    return [...quizQuestions.level1, ...quizQuestions.level2, ...quizQuestions.level3];
+  };
+
+  // Komponen untuk halaman pembahasan
+  const ReviewPage = () => {
+    const allQuestions = getCurrentQuestions();
+    
+    return (
+      <div className="bg-white rounded-3xl shadow-2xl p-8">
+        <h2 className="text-3xl font-bold text-stone-800 mb-6 text-center">Pembahasan Kuis</h2>
+        
+        <div className="space-y-8">
+          {allQuestions.map((question, index) => (
+            <div key={question.id} className="border-b-2 border-stone-100 pb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-bold">
+                  Level {Math.ceil((index + 1) / 5)}
+                </span>
+              </div>
+              <h3 className="text-xl font-bold text-stone-800 mb-4">
+                {index + 1}. {question.question}
+              </h3>
+              
+              <div className="space-y-2 mb-4">
+                {question.options.map((option, optIndex) => {
+                  const isCorrect = optIndex === question.correctAnswer;
+                  const isUserAnswer = userAnswers[index] === optIndex;
+                  
+                  let bgColor = "bg-white border-2 border-stone-200";
+                  if (isCorrect) {
+                    bgColor = "bg-green-100 border-2 border-green-500";
+                  } else if (isUserAnswer && !isCorrect) {
+                    bgColor = "bg-red-100 border-2 border-red-500";
+                  }
+                  
+                  return (
+                    <div 
+                      key={optIndex}
+                      className={`p-4 rounded-2xl ${bgColor} transition`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                          isCorrect ? 'bg-green-500 text-white' : 
+                          isUserAnswer && !isCorrect ? 'bg-red-500 text-white' : 
+                          'bg-stone-100 text-stone-600'
+                        }`}>
+                          {String.fromCharCode(65 + optIndex)}
+                        </div>
+                        <span className={`font-medium ${
+                          isCorrect ? 'text-green-800' : 
+                          isUserAnswer && !isCorrect ? 'text-red-800' : 
+                          'text-stone-700'
+                        }`}>
+                          {option}
+                          {isCorrect && " ✓"}
+                          {isUserAnswer && !isCorrect && " ✗"}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              <div className="bg-blue-50 rounded-2xl p-4">
+                <p className="text-blue-800 font-medium">💡 {question.explanation}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="text-center mt-8">
+          <button
+            onClick={startGame}
+            className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl transition transform hover:scale-105 mr-4"
+          >
+            Main Lagi
+          </button>
+          <button
+            onClick={() => setGameState('finished')}
+            className="bg-white text-blue-600 border-2 border-blue-600 px-8 py-4 rounded-full font-bold hover:bg-blue-50 transition"
+          >
+            Kembali ke Hasil
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const LevelCompletePage = () => {
+    const nextLevel = currentLevel === 'level1' ? 'level2' : 'level3';
+    const levelNames = {
+      level1: 'Level 1: Proses & Dedikasi',
+      level2: 'Level 2: Urgensi & Keaslian', 
+      level3: 'Level 3: Apresiasi & Tindakan'
+    };
+
+    return (
+      <div className="bg-white rounded-3xl shadow-2xl p-8 lg:p-12 text-center">
+        <div className="w-24 h-24 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Trophy className="text-white" size={48} />
+        </div>
+        
+        <h2 className="text-2xl lg:text-3xl font-bold text-stone-800 mb-4">
+          Level {currentLevel.slice(-1)} Selesai!
+        </h2>
+        
+        <div className="bg-green-50 rounded-2xl p-6 mb-8">
+          <p className="text-2xl font-bold text-green-700 mb-2">
+            {levelScores[currentLevel]} Poin
+          </p>
+          <p className="text-stone-600 font-medium mb-2">{levelNames[currentLevel]}</p>
+          <p className="text-stone-600">
+            {levelScores[currentLevel] >= 400 ? 'Luar biasa! ✨' :
+             levelScores[currentLevel] >= 300 ? 'Hebat! 👍' :
+             'Bagus! Terus belajar! 📚'}
+          </p>
+        </div>
+
+        {nextLevel === 'level2' && (
+          <div className="mb-6">
+            <h3 className="font-bold text-stone-700 mb-2">Selanjutnya: Level 2</h3>
+            <p className="text-stone-600">Mari pelajari tentang urgensi melestarikan batik tulis!</p>
+          </div>
+        )}
+
+        {nextLevel === 'level3' && (
+          <div className="mb-6">
+            <h3 className="font-bold text-stone-700 mb-2">Selanjutnya: Level 3</h3>
+            <p className="text-stone-600">Pelajari bagaimana Anda bisa membantu melestarikan warisan budaya ini!</p>
+          </div>
+        )}
+
+        <div className="flex gap-4 justify-center">
+          <button
+            onClick={() => startLevel(nextLevel)}
+            className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl transition transform hover:scale-105"
+          >
+            Lanjut ke Level {nextLevel.slice(-1)}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const getLevelName = (level: string) => {
+    const names = {
+      level1: 'Proses & Dedikasi',
+      level2: 'Urgensi & Keaslian',
+      level3: 'Apresiasi & Tindakan'
+    };
+    return names[level as keyof typeof names] || level;
   };
 
   return (
@@ -176,13 +330,13 @@ const KuisGame = () => {
           <div className="text-center mb-8 lg:mb-12">
             <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-bold mb-4">
               <Trophy className="w-5 h-5" />
-              <span>Kuis Interaktif</span>
+              <span>Kuis Interaktif Berlevel</span>
             </div>
             <h1 className="text-4xl lg:text-6xl font-bold text-stone-800 mb-4">
-              Kuis Cerdas Budaya
+              Kuis Cerdas Berbatik
             </h1>
             <p className="text-lg lg:text-xl text-stone-600 max-w-2xl mx-auto">
-              Uji pengetahuan batik Anda dan bersaing dengan pemain lain secara real-time!
+              "Menghargai Sang Maha Karya" - Uji pengetahuan batik Anda melalui 3 level tantangan!
             </p>
           </div>
 
@@ -198,30 +352,64 @@ const KuisGame = () => {
                   <h2 className="text-2xl lg:text-3xl font-bold text-stone-800 mb-4">
                     Siap Bermain?
                   </h2>
+
+                  {/* Input Nama */}
+                  <div className="max-w-md mx-auto mb-8">
+                    <label className="block text-stone-700 text-left mb-2 font-medium">
+                      Masukkan Nama Anda:
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400 w-5 h-5" />
+                      <input
+                        type="text"
+                        value={playerName}
+                        onChange={(e) => setPlayerName(e.target.value)}
+                        placeholder="Nama pemain"
+                        className="w-full pl-10 pr-4 py-3 border-2 border-stone-200 rounded-2xl focus:border-blue-500 focus:outline-none transition"
+                        maxLength={20}
+                      />
+                    </div>
+                  </div>
                   
                   <div className="bg-blue-50 rounded-2xl p-6 mb-8">
-                    <h3 className="font-bold text-blue-900 mb-3">Aturan Permainan</h3>
-                    <ul className="text-left space-y-2 text-blue-800">
-                      <li className="flex items-center gap-2">
-                        <Star size={16} className="text-blue-600" />
-                        <span>5 pertanyaan tentang batik</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Clock size={16} className="text-blue-600" />
-                        <span>Timer untuk setiap pertanyaan</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Trophy size={16} className="text-blue-600" />
-                        <span>100 poin untuk jawaban benar</span>
-                      </li>
-                    </ul>
+                    <h3 className="font-bold text-blue-900 mb-4">Tantangan 3 Level</h3>
+                    <div className="space-y-4 text-left">
+                      <div className="flex items-start gap-3">
+                        <div className="bg-blue-100 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mt-1">
+                          1
+                        </div>
+                        <div>
+                          <p className="font-semibold text-blue-900">Level 1: Proses & Dedikasi</p>
+                          <p className="text-blue-800 text-sm">Pahami mengapa batik tulis berharga premium</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="bg-green-100 text-green-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mt-1">
+                          2
+                        </div>
+                        <div>
+                          <p className="font-semibold text-green-900">Level 2: Urgensi & Keaslian</p>
+                          <p className="text-green-800 text-sm">Ketahui mengapa Anda harus peduli</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="bg-amber-100 text-amber-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mt-1">
+                          3
+                        </div>
+                        <div>
+                          <p className="font-semibold text-amber-900">Level 3: Apresiasi & Tindakan</p>
+                          <p className="text-amber-800 text-sm">Pelajari bagaimana Anda bisa membantu</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   <button
                     onClick={startGame}
-                    className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-12 py-4 rounded-full font-bold hover:shadow-xl transition transform hover:scale-105 text-lg"
+                    className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-12 py-4 rounded-full font-bold hover:shadow-xl transition transform hover:scale-105 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!playerName.trim()}
                   >
-                    Mulai Kuis
+                    Mulai Petualangan
                   </button>
                 </div>
               )}
@@ -232,7 +420,7 @@ const KuisGame = () => {
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-4">
                       <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full font-bold">
-                        Pertanyaan {currentQuestion + 1}/{quizQuestions.length}
+                        {getLevelName(currentLevel)} - Soal {currentQuestion + 1}/{quizQuestions[currentLevel].length}
                       </div>
                       <div className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold ${
                         timeLeft > 10 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -241,19 +429,24 @@ const KuisGame = () => {
                         <span>{timeLeft}s</span>
                       </div>
                     </div>
-                    <div className="bg-amber-100 text-amber-800 px-4 py-2 rounded-full font-bold">
-                      Score: {score}
+                    <div className="flex items-center gap-4">
+                      <div className="bg-amber-100 text-amber-800 px-4 py-2 rounded-full font-bold">
+                        Total: {score}
+                      </div>
+                      <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full font-bold">
+                        Level: {levelScores[currentLevel]}
+                      </div>
                     </div>
                   </div>
 
                   {/* Question */}
                   <h2 className="text-2xl lg:text-3xl font-bold text-stone-800 mb-8 leading-relaxed">
-                    {quizQuestions[currentQuestion].question}
+                    {quizQuestions[currentLevel][currentQuestion].question}
                   </h2>
 
                   {/* Answers */}
                   <div className="space-y-4">
-                    {quizQuestions[currentQuestion].options.map((option, index) => (
+                    {quizQuestions[currentLevel][currentQuestion].options.map((option, index) => (
                       <button
                         key={index}
                         onClick={() => handleAnswerSelect(index)}
@@ -264,7 +457,7 @@ const KuisGame = () => {
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
                             selectedAnswer === null 
                               ? 'bg-blue-100 text-blue-800' 
-                              : index === quizQuestions[currentQuestion].correctAnswer
+                              : index === quizQuestions[currentLevel][currentQuestion].correctAnswer
                                 ? 'bg-green-100 text-green-800'
                                 : 'bg-stone-100 text-stone-400'
                           }`}>
@@ -278,6 +471,8 @@ const KuisGame = () => {
                 </div>
               )}
 
+              {gameState === 'levelComplete' && <LevelCompletePage />}
+
               {gameState === 'finished' && (
                 <div className="bg-white rounded-3xl shadow-2xl p-8 lg:p-12 text-center">
                   <div className="w-24 h-24 bg-gradient-to-r from-amber-400 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -285,15 +480,29 @@ const KuisGame = () => {
                   </div>
                   
                   <h2 className="text-2xl lg:text-3xl font-bold text-stone-800 mb-4">
-                    Kuis Selesai!
+                    Selamat, {playerName}!
                   </h2>
                   
                   <div className="bg-amber-50 rounded-2xl p-6 mb-8">
                     <p className="text-4xl font-bold text-amber-700 mb-2">{score} Poin</p>
+                    <div className="grid grid-cols-3 gap-4 mb-4">
+                      <div className="text-center">
+                        <p className="text-sm text-stone-600">Level 1</p>
+                        <p className="font-bold text-blue-600">{levelScores.level1}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm text-stone-600">Level 2</p>
+                        <p className="font-bold text-green-600">{levelScores.level2}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm text-stone-600">Level 3</p>
+                        <p className="font-bold text-amber-600">{levelScores.level3}</p>
+                      </div>
+                    </div>
                     <p className="text-stone-600">
-                      {score >= 400 ? 'Luar biasa! Anda benar-benar ahli batik! 🎉' :
-                       score >= 300 ? 'Hebat! Pengetahuan batik Anda sangat baik! ✨' :
-                       score >= 200 ? 'Bagus! Terus belajar tentang batik! 👍' :
+                      {score >= 1200 ? 'Luar biasa! Anda benar-benar ahli batik! 🎉' :
+                       score >= 900 ? 'Hebat! Pengetahuan batik Anda sangat baik! ✨' :
+                       score >= 600 ? 'Bagus! Terus belajar tentang batik! 👍' :
                        'Mari belajar lebih banyak tentang batik bersama-sama! 📚'}
                     </p>
                   </div>
@@ -305,12 +514,17 @@ const KuisGame = () => {
                     >
                       Main Lagi
                     </button>
-                    <button className="bg-white text-blue-600 border-2 border-blue-600 px-8 py-4 rounded-full font-bold hover:bg-blue-50 transition">
+                    <button 
+                      onClick={showReview}
+                      className="bg-white text-blue-600 border-2 border-blue-600 px-8 py-4 rounded-full font-bold hover:bg-blue-50 transition"
+                    >
                       Lihat Pembahasan
                     </button>
                   </div>
                 </div>
               )}
+
+              {gameState === 'review' && <ReviewPage />}
             </div>
 
             {/* Leaderboard */}
@@ -318,39 +532,44 @@ const KuisGame = () => {
               <div className="bg-white rounded-3xl shadow-2xl p-6 lg:p-8 sticky top-8">
                 <h2 className="text-xl font-bold text-stone-800 mb-6 flex items-center gap-2">
                   <Trophy className="text-amber-600" />
-                  Leaderboard
+                  Leaderboard Global
                 </h2>
                 
                 <div className="space-y-3">
-                  {players
-                    .sort((a, b) => b.score - a.score)
-                    .map((player, index) => (
-                      <div
-                        key={player.id}
-                        className={`flex items-center gap-4 p-4 rounded-2xl transition ${
-                          player.isYou
-                            ? 'bg-blue-100 border-2 border-blue-200'
-                            : 'bg-stone-50 hover:bg-stone-100'
-                        }`}
-                      >
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                          index === 0 ? 'bg-amber-100 text-amber-800' :
-                          index === 1 ? 'bg-stone-200 text-stone-800' :
-                          index === 2 ? 'bg-orange-100 text-orange-800' :
-                          'bg-stone-100 text-stone-600'
-                        }`}>
-                          {index + 1}
-                        </div>
-                        <div className="flex-1">
-                          <p className={`font-semibold ${player.isYou ? 'text-blue-800' : 'text-stone-800'}`}>
-                            {player.name} {player.isYou && '(Anda)'}
-                          </p>
-                        </div>
-                        <div className="bg-stone-100 px-3 py-1 rounded-full font-bold text-stone-800">
-                          {player.score}
-                        </div>
+                  {leaderboard.map((player, index) => (
+                    <div
+                      key={player.id}
+                      className={`flex items-center gap-4 p-4 rounded-2xl transition ${
+                        player.name === playerName 
+                          ? 'bg-blue-100 border-2 border-blue-200' 
+                          : 'bg-stone-50 hover:bg-stone-100'
+                      }`}
+                    >
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                        index === 0 ? 'bg-amber-100 text-amber-800' :
+                        index === 1 ? 'bg-stone-200 text-stone-800' :
+                        index === 2 ? 'bg-orange-100 text-orange-800' :
+                        'bg-stone-100 text-stone-600'
+                      }`}>
+                        {index + 1}
                       </div>
-                    ))}
+                      <div className="flex-1">
+                        <p className={`font-semibold ${
+                          player.name === playerName ? 'text-blue-800' : 'text-stone-800'
+                        }`}>
+                          {player.name} {player.name === playerName && '(Anda)'}
+                        </p>
+                      </div>
+                      <div className="bg-stone-100 px-3 py-1 rounded-full font-bold text-stone-800">
+                        {player.score}
+                      </div>
+                    </div>
+                  ))}
+                  {leaderboard.length === 0 && (
+                    <div className="text-center py-4 text-stone-500">
+                      Belum ada data leaderboard
+                    </div>
+                  )}
                 </div>
 
                 {/* Stats */}
@@ -362,8 +581,16 @@ const KuisGame = () => {
                       <p className="font-bold text-stone-800">{players.length}</p>
                     </div>
                     <div>
-                      <p className="text-stone-600">Pertanyaan</p>
-                      <p className="font-bold text-stone-800">{quizQuestions.length}</p>
+                      <p className="text-stone-600">Total Pertanyaan</p>
+                      <p className="font-bold text-stone-800">15</p>
+                    </div>
+                    <div>
+                      <p className="text-stone-600">Level</p>
+                      <p className="font-bold text-stone-800">3</p>
+                    </div>
+                    <div>
+                      <p className="text-stone-600">Skor Maksimal</p>
+                      <p className="font-bold text-stone-800">1500</p>
                     </div>
                   </div>
                 </div>
