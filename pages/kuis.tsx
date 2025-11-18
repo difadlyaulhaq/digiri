@@ -297,7 +297,7 @@ const KuisGame = () => {
         <div className="flex gap-4 justify-center">
           <button
             onClick={() => startLevel(nextLevel)}
-            className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl transition transform hover:scale-105"
+            className="bg-linear-to-r from-blue-600 to-cyan-600 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl transition transform hover:scale-105"
           >
             Lanjut ke Level {nextLevel.slice(-1)}
           </button>
@@ -322,7 +322,7 @@ const KuisGame = () => {
         <meta name="description" content="Uji pengetahuan Anda tentang batik dalam kuis interaktif" />
       </Head>
       
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-100">
+      <div className="min-h-screen bg-linear-to-br from-blue-50 to-cyan-100">
         <Navbar />
         
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
@@ -406,7 +406,7 @@ const KuisGame = () => {
 
                   <button
                     onClick={startGame}
-                    className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-12 py-4 rounded-full font-bold hover:shadow-xl transition transform hover:scale-105 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-linear-to-r from-blue-600 to-cyan-600 text-white px-12 py-4 rounded-full font-bold hover:shadow-xl transition transform hover:scale-105 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={!playerName.trim()}
                   >
                     Mulai Petualangan
@@ -475,7 +475,7 @@ const KuisGame = () => {
 
               {gameState === 'finished' && (
                 <div className="bg-white rounded-3xl shadow-2xl p-8 lg:p-12 text-center">
-                  <div className="w-24 h-24 bg-gradient-to-r from-amber-400 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <div className="w-24 h-24 bg-linear-to-r from-amber-400 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
                     <Trophy className="text-white" size={48} />
                   </div>
                   
@@ -510,7 +510,7 @@ const KuisGame = () => {
                   <div className="flex gap-4 justify-center">
                     <button
                       onClick={startGame}
-                      className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl transition transform hover:scale-105"
+                      className="bg-linear-to-r from-blue-600 to-cyan-600 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl transition transform hover:scale-105"
                     >
                       Main Lagi
                     </button>
