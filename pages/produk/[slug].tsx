@@ -159,7 +159,7 @@ const ProductDetailPage = () => {
                 </div>
               )}
               {product.nftIncluded && (
-                <div className="absolute top-16 left-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+                <div className="absolute top-16 left-4 bg-linear-to-r from-amber-500 to-amber-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
                   <Award size={12} />
                   NFT Included
                 </div>
@@ -172,7 +172,7 @@ const ProductDetailPage = () => {
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  className={`flex-shrink-0 w-20 h-20 bg-stone-100 rounded-xl overflow-hidden border-2 ${
+                  className={` shrink-0 w-20 h-20 bg-stone-100 rounded-xl overflow-hidden border-2 ${
                     selectedImage === index ? 'border-amber-600' : 'border-transparent'
                   }`}
                 >
@@ -307,7 +307,7 @@ const ProductDetailPage = () => {
 
             {/* NFT Info */}
             {product.nftIncluded && (
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-4 border border-purple-200">
+              <div className="bg-linear-to-br from-purple-50 to-pink-50 rounded-2xl p-4 border border-purple-200">
                 <div className="flex items-center gap-3">
                   <Sparkles className="text-purple-600" size={24} />
                   <div>
@@ -340,7 +340,7 @@ const ProductDetailPage = () => {
               <button
                 onClick={handleBuyNow}
                 disabled={addingToCart || !selectedSize || !selectedColor}
-                className="flex-1 bg-gradient-to-r from-amber-800 to-amber-900 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl transition text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-linear-to-r from-amber-800 to-amber-900 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl transition text-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {addingToCart ? 'Menambahkan...' : 'Beli Sekarang'}
               </button>

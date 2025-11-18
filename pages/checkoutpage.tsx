@@ -417,7 +417,7 @@ const CheckoutPage = () => {
 
                 <button
                   type="submit"
-                  className="w-full mt-6 bg-gradient-to-r from-amber-800 to-amber-900 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl transition text-lg"
+                  className="w-full mt-6 bg-linear-to-r from-amber-800 to-amber-900 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl transition text-lg"
                 >
                   Lanjut ke Pembayaran
                 </button>
@@ -457,7 +457,7 @@ const CheckoutPage = () => {
 
                 <button
                   onClick={handlePayment}
-                  className="w-full bg-gradient-to-r from-amber-800 to-amber-900 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl transition text-lg"
+                  className="w-full bg-linear-to-r from-amber-800 to-amber-900 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl transition text-lg"
                 >
                   Bayar Sekarang - {formatPrice(total)}
                 </button>
