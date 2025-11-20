@@ -1,6 +1,6 @@
-# 🏛️ Giriloyo Immersive
+# 🔷 Digiri
 
-![Giriloyo Immersive Banner](public/logo.png)
+![Digiri Banner](public/LOGO-DIGIRI.png)
 
 > **Warisan Budaya Bertemu Teknologi Masa Depan.**
 > Platform *Phygital* (Physical + Digital) untuk pelestarian, edukasi, dan perdagangan Batik Tulis Giriloyo yang diakui UNESCO.
@@ -12,7 +12,7 @@
 
 ## 📖 Tentang Proyek
 
-**Giriloyo Immersive** adalah aplikasi web imersif yang mengangkat Desa Wisata Batik Giriloyo ke ranah digital. Proyek ini bukan sekadar *e-commerce*, melainkan ekosistem edukasi dan pelestarian budaya yang menggabungkan pengalaman nyata dengan teknologi blockchain dan AI.
+**Digiri** (Digital Giriloyo) adalah platform imersif yang mengangkat Desa Wisata Batik Giriloyo ke ranah digital. Proyek ini bukan sekadar *e-commerce*, melainkan ekosistem edukasi dan pelestarian budaya yang menggabungkan pengalaman nyata dengan teknologi blockchain dan AI.
 
 Visi utama kami adalah konsep **"Phygital"**: Setiap pembelian fisik Batik Tulis akan disertai dengan sertifikat keaslian digital dalam bentuk **NFT** (Non-Fungible Token).
 
@@ -75,32 +75,16 @@ Pastikan Anda telah menginstal [Node.js](https://nodejs.org/) (versi 18 atau leb
 ## 📂 Struktur Proyek
 
 Berikut adalah gambaran struktur folder utama proyek ini:
-giriloyoimersive/ ├── components/ # Komponen UI yang dapat digunakan kembali (Navbar, Footer, dll) ├── pages/ # Halaman aplikasi (Next.js Pages Router) │ ├── api/ # API Routes (Backend serverless) │ ├── bookingwisatapage.tsx # Halaman Booking Eduwisata │ ├── checkoutpage.tsx # Halaman Pembayaran & Form │ ├── index.tsx # Landing Page Utama │ └── productdetailpage.tsx # Detail Produk & Zoom Gambar ├── public/ # Aset statis (Gambar Batik, Logo, Icon) ├── styles/ # File CSS global └── ...konfigurasi (tailwind, tsconfig, eslint, package.json)
-## 🗺️ Roadmap Pengembangan
 
-- [x] **Fase 1: UI/UX & Frontend Core** (Landing Page, Katalog, Detail Produk).
-- [x] **Fase 2: Sistem Booking** (Formulir pemesanan paket wisata).
-- [ ] **Fase 3: Integrasi Backend** (NestJS setup, Database PostgreSQL).
-- [ ] **Fase 4: Payment Gateway** (Integrasi Midtrans Snap).
-- [ ] **Fase 5: Web3 & AI** (Integrasi Crossmint NFT Minting & Gemini AI).
-
-## 🤝 Berkontribusi
-
-Kontribusi sangat diterima! Jika Anda ingin membantu melestarikan budaya batik melalui kode:
-
-1.  *Fork* repositori ini.
-2.  Buat *branch* fitur baru (`git checkout -b fitur-keren`).
-3.  *Commit* perubahan Anda (`git commit -m 'Menambahkan fitur keren'`).
-4.  *Push* ke branch tersebut (`git push origin fitur-keren`).
-5.  Buat *Pull Request*.
-
-## 📄 Lisensi
-
-Proyek ini dilisensikan di bawah [MIT License](LICENSE).
-
----
-
-<div align="center">
-  <p>Dibuat dengan ❤️ dan ☕ di Yogyakarta</p>
-  <p><b>Melestarikan Budaya, Satu Baris Kode Sekaligus.</b></p>
-</div>
+```text
+giriloyoimersive/
+├── components/         # Komponen UI yang dapat digunakan kembali (Navbar, Footer, dll)
+├── pages/              # Halaman aplikasi (Next.js Pages Router)
+│   ├── api/            # API Routes (Backend serverless)
+│   ├── bookingwisatapage.tsx # Halaman Booking Eduwisata
+│   ├── checkoutpage.tsx      # Halaman Pembayaran & Form
+│   ├── index.tsx             # Landing Page Utama
+│   └── productdetailpage.tsx # Detail Produk & Zoom Gambar
+├── public/             # Aset statis (Gambar Batik, Logo, Icon)
+├── styles/             # File CSS global
+└── ...konfigurasi (tailwind, tsconfig, eslint, package.json)
