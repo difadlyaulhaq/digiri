@@ -112,7 +112,7 @@ const Footer = () => {
                 </Link>
               </li> 
             </ul>
-          </div> *
+          </div> 
         </div>
 
         <div className="border-t border-blue-700 pt-8 text-center">

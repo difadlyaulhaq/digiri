@@ -253,7 +253,7 @@ const GiriloyoLanding = () => {
               <div className="relative">
                 <div className="absolute -inset-4 bg-gradient-to-br from-blue-900 to-slate-900 rounded-3xl blur-3xl opacity-20 animate-pulse"></div>
                 <img 
-                  src="/Muslimbatik.png" 
+                  src="/gelombang-cinta2.png" 
                   alt="Batik Model"
                   className="relative w-full h-auto rounded-3xl shadow-2xl"
                 />
@@ -535,7 +535,7 @@ const GiriloyoLanding = () => {
               <div className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold mb-4">
                 🧠 EDUKASI INTERAKTIF
               </div>
-              <h3 className="text-xl lg:text-2xl font-bold mb-4 text-slate-800">Kuis Cerdas Budaya</h3>
+              <h3 className="text-xl lg:text-2xl font-bold mb-4 text-slate-800">Kuis Cerdas Batik</h3>
               <p className="text-sm lg:text-base text-slate-600 mb-6 leading-relaxed">
                 Uji pengetahuan Anda tentang batik! Kompetisi real-time dengan sistem leaderboard yang dinamis.
               </p>

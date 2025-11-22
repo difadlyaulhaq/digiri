@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { RotateCcw, Award, Star, Volume2, VolumeX, Clock, Droplets, Target } from 'lucide-react';
+import { RotateCcw, Award, Star, Volume2, VolumeX, Clock, Droplets, Target, Undo, Book, History, Sparkles } from 'lucide-react';
 import { Analytics } from "@vercel/analytics/next"
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -12,6 +12,7 @@ const MencantingGame = () => {
   const [progress, setProgress] = useState(0);
   const [inkLeft, setInkLeft] = useState(100);
   const [timeLeft, setTimeLeft] = useState(300);
+  const [activeTab, setActiveTab] = useState<'philosophy' | 'usage' | 'history'>('philosophy');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const patternImgRef = useRef<HTMLImageElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -19,35 +20,73 @@ const MencantingGame = () => {
   const [cursorVisible, setCursorVisible] = useState(false);
   const [patternLoaded, setPatternLoaded] = useState(false);
   const lastInkReductionRef = useRef(0);
+  const drawingHistoryRef = useRef<ImageData[]>([]);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const batikPatterns = {
-    1: {
-      name: "Motif Kawung Dasar",
+  const batikPatterns = [
+    {
+      id: "batik-kawung",
+      name: "Batik Tulis Motif Kawung",
+      description: "Motif klasik geometris berbentuk bulatan lonjong yang disusun rapi, melambangkan kebijaksanaan dan pengendalian diri.",
+      philosophy: "Terinspirasi dari buah aren (kolang-kaling) yang melambangkan manusia yang berguna dari lahir hingga akhir. Empat sisi yang bertemu di satu titik pusat (Papat Kiblat Lima Pancer) bermakna keseimbangan hidup, kesucian hati, dan sifat adil seorang pemimpin sejati.",
+      usage: "Sangat cocok untuk acara formal, pertemuan bisnis, atau pakaian kerja karena memancarkan aura wibawa dan profesionalisme.",
+      history: "Dahulu merupakan salah satu 'Batik Larangan' (Forbidden Pattern) di Keraton Yogyakarta yang hanya boleh dikenakan oleh Sultan dan kerabat inti kerajaan.",
       image: "/kawung-patern.png",
-      description: "Ikuti pola lingkaran kawung dengan tepat",
       targetScore: 70,
       timeLimit: 300,
       inkLimit: 100
     },
-    2: {
-      name: "Motif Parang",
+    {
+      id: "batik-parang",
+      name: "Batik Tulis Motif Parang",
+      description: "Motif garis diagonal tegas menyerupai huruf 'S' yang saling menjalin, melambangkan kekuatan dan semangat pantang menyerah.",
+      philosophy: "Berasal dari kata 'Pereng' (tebing/lereng) atau ombak samudra. Melambangkan semangat yang tidak pernah padam ibarat ombak yang menghantam karang. Garis diagonalnya melambangkan ketangkasan, kewaspadaan, dan keinginan untuk terus memperbaiki diri.",
+      usage: "Cocok untuk acara kenegaraan, pembukaan bisnis, atau momen yang membutuhkan ketegasan karakter. Memberikan kesan dinamis dan kuat pada pemakainya.",
+      history: "Salah satu motif tertua di Jawa yang diciptakan oleh pendiri Keraton Mataram. Dulu motif Parang Rusak adalah motif khusus untuk para ksatria dan raja, rakyat jelata dilarang memakainya.",
       image: "/parang-patern.jpg",
-      description: "Ikuti pola garis miring parang dengan presisi",
       targetScore: 75,
       timeLimit: 360,
       inkLimit: 100
     },
-    3: {
-      name: "Motif Truntum",
+    {
+      id: "batik-truntum",
+      name: "Batik Tulis Motif Truntum",
+      description: "Motif bertabur kembang kecil menyerupai bintang atau melati di langit malam, melambangkan cinta yang tulus dan bersemi kembali.",
+      philosophy: "Berasal dari kata 'Tumaruntum' yang berarti tumbuh atau bersemi. Melambangkan cinta kasih orang tua yang tulus tanpa syarat kepada anaknya, serta harapan agar kehidupan pengantin baru selalu dituntun ke arah kebaikan.",
+      usage: "Wajib digunakan pada acara pernikahan, khususnya dipakai oleh Orang Tua pengantin saat prosesi midodareni atau panggih.",
+      history: "Diciptakan oleh Kanjeng Ratu Kencana (Permaisuri Sunan Pakubuwono III) dari Surakarta. Konon motif ini dibuat saat Ratu menatap bintang di langit kelam, sebagai simbol cintanya yang kembali bersemi kepada Raja.",
       image: "/truntum-patern.jpg",
-      description: "Buat pola bintang truntum yang sempurna",
       targetScore: 80,
       timeLimit: 420,
       inkLimit: 100
     }
-  };
+  ];
 
-  const currentLevel = batikPatterns[level as keyof typeof batikPatterns];
+  const currentLevel = batikPatterns[level - 1];
+
+  // Initialize audio
+  useEffect(() => {
+    audioRef.current = new Audio('/gamelan-kebogiri.mp3');
+    audioRef.current.loop = true;
+    audioRef.current.volume = 0.3;
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    };
+  }, []);
+
+  // Music control
+  useEffect(() => {
+    if (audioRef.current) {
+      if (isMusicPlaying) {
+        audioRef.current.play().catch(e => console.log('Audio play failed:', e));
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [isMusicPlaying]);
 
   // Load pattern image
   useEffect(() => {
@@ -138,12 +177,13 @@ const MencantingGame = () => {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     if (patternImgRef.current) {
-      ctx.globalAlpha = 0.25;
+      ctx.globalAlpha = 0.2;
       ctx.drawImage(patternImgRef.current, 0, 0, canvas.width, canvas.height);
       ctx.globalAlpha = 1.0;
     }
 
     drawGridGuide(ctx);
+    saveCanvasState();
   };
 
   const drawGridGuide = (ctx: CanvasRenderingContext2D) => {
@@ -168,6 +208,34 @@ const MencantingGame = () => {
     ctx.setLineDash([]);
   };
 
+  const saveCanvasState = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    drawingHistoryRef.current.push(imageData);
+  };
+
+  const undoLastStroke = () => {
+    if (drawingHistoryRef.current.length <= 1) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    drawingHistoryRef.current.pop();
+    const previousState = drawingHistoryRef.current[drawingHistoryRef.current.length - 1];
+    ctx.putImageData(previousState, 0, 0);
+
+    setProgress(prev => Math.max(0, prev - 5));
+    setInkLeft(prev => Math.min(100, prev + 2));
+  };
+
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (gameState !== 'playing' || inkLeft <= 0) return;
 
@@ -184,9 +252,8 @@ const MencantingGame = () => {
     setIsDrawing(true);
     ctx.beginPath();
     ctx.moveTo(x, y);
-    // WARNA TINTA ASLI BATIK (COKLAT)
     ctx.strokeStyle = '#7C2D12';
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 3;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     
@@ -210,18 +277,21 @@ const MencantingGame = () => {
     ctx.stroke();
 
     const now = Date.now();
-    if (now - lastInkReductionRef.current > 50) {
+    if (now - lastInkReductionRef.current > 100) {
       setInkLeft(prev => {
-        const newInk = Math.max(0, prev - 0.02);
+        const newInk = Math.max(0, prev - 0.01);
         lastInkReductionRef.current = now;
         return newInk;
       });
     }
     
-    setProgress(prev => Math.min(prev + 0.02, 100));
+    setProgress(prev => Math.min(prev + 0.01, 100));
   };
 
   const stopDrawing = () => {
+    if (isDrawing) {
+      saveCanvasState();
+    }
     setIsDrawing(false);
   };
 
@@ -232,6 +302,7 @@ const MencantingGame = () => {
     setInkLeft(100);
     setTimeLeft(currentLevel.timeLimit);
     lastInkReductionRef.current = 0;
+    drawingHistoryRef.current = [];
     initializeCanvas();
   };
 
@@ -251,6 +322,7 @@ const MencantingGame = () => {
     setInkLeft(100);
     setTimeLeft(currentLevel.timeLimit);
     lastInkReductionRef.current = 0;
+    drawingHistoryRef.current = [];
     initializeCanvas();
   };
 
@@ -278,10 +350,37 @@ const MencantingGame = () => {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
+  const getTabContent = () => {
+    switch (activeTab) {
+      case 'philosophy':
+        return currentLevel.philosophy;
+      case 'usage':
+        return currentLevel.usage;
+      case 'history':
+        return currentLevel.history;
+      default:
+        return currentLevel.philosophy;
+    }
+  };
+
+  const getTabIcon = () => {
+    switch (activeTab) {
+      case 'philosophy':
+        return <Sparkles size={16} />;
+      case 'usage':
+        return <Book size={16} />;
+      case 'history':
+        return <History size={16} />;
+      default:
+        return <Sparkles size={16} />;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
       <Navbar/>
       <Analytics/>
+      
       {/* Header */}
       <div className="text-center pt-12 pb-8">
         <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-bold mb-4">
@@ -321,7 +420,6 @@ const MencantingGame = () => {
 
             {/* Resource Bars */}
             <div className="bg-white px-6 py-4 grid grid-cols-3 gap-4">
-              {/* Progress Bar */}
               <div>
                 <div className="flex items-center justify-between text-sm mb-2">
                   <span className="text-blue-800 font-semibold flex items-center gap-1">
@@ -338,7 +436,6 @@ const MencantingGame = () => {
                 </div>
               </div>
 
-              {/* Ink Bar - WARNA COKLAT UNTUK TINTA */}
               <div>
                 <div className="flex items-center justify-between text-sm mb-2">
                   <span className="text-amber-800 font-semibold flex items-center gap-1">
@@ -355,7 +452,6 @@ const MencantingGame = () => {
                 </div>
               </div>
 
-              {/* Timer */}
               <div>
                 <div className="flex items-center justify-between text-sm mb-2">
                   <span className="text-green-800 font-semibold flex items-center gap-1">
@@ -394,8 +490,8 @@ const MencantingGame = () => {
                   <div 
                     className="absolute pointer-events-none transition-transform z-50"
                     style={{
-                      left: cursorPosition.x - 20,
-                      top: cursorPosition.y - 40,
+                      left: cursorPosition.x + 4,
+                      top: cursorPosition.y - 25,
                       transform: isDrawing ? 'scale(0.9) rotate(5deg)' : 'scale(1)'
                     }}
                   >
@@ -453,7 +549,6 @@ const MencantingGame = () => {
                           <p className="text-blue-100 text-xs">Progress</p>
                           <p className="text-xl font-bold">{Math.round(progress)}%</p>
                         </div>
-                        {/* Warna coklat untuk tinta di hasil */}
                         <div className="bg-amber-700/30 backdrop-blur p-3 rounded-2xl">
                           <p className="text-amber-100 text-xs">Tinta</p>
                           <p className="text-xl font-bold">{Math.round(inkLeft)}%</p>
@@ -495,6 +590,15 @@ const MencantingGame = () => {
               {/* Controls */}
               <div className="flex items-center justify-between mt-6">
                 <div className="flex gap-3">
+                  <button
+                    onClick={undoLastStroke}
+                    disabled={drawingHistoryRef.current.length <= 1 || gameState !== 'playing'}
+                    className="bg-white border-2 border-slate-300 p-3 rounded-full hover:bg-slate-50 transition disabled:opacity-50"
+                    title="Undo"
+                  >
+                    <Undo size={20} className="text-slate-700" />
+                  </button>
+
                   <button
                     onClick={resetGame}
                     className="bg-white border-2 border-slate-300 p-3 rounded-full hover:bg-slate-50 transition"
@@ -568,7 +672,7 @@ const MencantingGame = () => {
                   <div className="w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-blue-800 font-bold">3</span>
                   </div>
-                  <p>Tinta sekarang lebih awet - gambar dengan tenang dan presisi</p>
+                  <p>Gunakan tombol <Undo size={14} className="inline" /> untuk membatalkan goresan terakhir</p>
                 </div>
                 <div className="flex gap-3">
                   <div className="w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -579,13 +683,68 @@ const MencantingGame = () => {
               </div>
             </div>
 
+            {/* Informasi Motif dengan Tabs */}
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-6 border-2 border-amber-200">
+              <h3 className="font-bold text-amber-800 mb-4 flex items-center gap-2">
+                <Book size={20} />
+                Informasi Motif {currentLevel.name.split(' ').pop()}
+              </h3>
+              
+              {/* Tabs */}
+              <div className="flex gap-2 mb-4 bg-amber-100 p-1 rounded-2xl">
+                <button
+                  onClick={() => setActiveTab('philosophy')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition flex-1 justify-center ${
+                    activeTab === 'philosophy' 
+                      ? 'bg-amber-500 text-white shadow-sm' 
+                      : 'text-amber-700 hover:bg-amber-200'
+                  }`}
+                >
+                  <Sparkles size={14} />
+                  Filosofi
+                </button>
+                <button
+                  onClick={() => setActiveTab('usage')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition flex-1 justify-center ${
+                    activeTab === 'usage' 
+                      ? 'bg-amber-500 text-white shadow-sm' 
+                      : 'text-amber-700 hover:bg-amber-200'
+                  }`}
+                >
+                  <Book size={14} />
+                  Penggunaan
+                </button>
+                <button
+                  onClick={() => setActiveTab('history')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition flex-1 justify-center ${
+                    activeTab === 'history' 
+                      ? 'bg-amber-500 text-white shadow-sm' 
+                      : 'text-amber-700 hover:bg-amber-200'
+                  }`}
+                >
+                  <History size={14} />
+                  Sejarah
+                </button>
+              </div>
+
+              {/* Tab Content */}
+              <div className="text-amber-800 text-sm leading-relaxed min-h-[120px]">
+                <div className="flex items-start gap-3">
+                  <div className="text-amber-600 mt-0.5 flex-shrink-0">
+                    {getTabIcon()}
+                  </div>
+                  <p>{getTabContent()}</p>
+                </div>
+              </div>
+            </div>
+
             {/* Level Info */}
             <div className="bg-gradient-to-br from-blue-100 to-indigo-100 rounded-3xl p-6 border-2 border-blue-200">
               <h3 className="font-bold text-slate-800 mb-4">Level {level}</h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-slate-600">Motif:</span>
-                  <span className="font-semibold text-slate-800">{currentLevel.name}</span>
+                  <span className="font-semibold text-slate-800">{currentLevel.name.split(' ').pop()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">Target Skor:</span>
@@ -611,7 +770,7 @@ const MencantingGame = () => {
               <div className="space-y-2 text-blue-700 text-sm">
                 <p>• Gambar dengan gerakan halus dan stabil</p>
                 <p>• Ikuti pola dengan teliti</p>
-                <p>• Jangan terburu-buru, tinta sekarang lebih awet</p>
+                <p>• Gunakan tombol Undo jika salah</p>
                 <p>• Angkat canting saat tidak menggambar untuk menghemat tinta</p>
               </div>
             </div>
