@@ -66,7 +66,7 @@ const MencantingGame = () => {
 
   // Initialize audio
   useEffect(() => {
-    audioRef.current = new Audio('/gamelan-kebogiri.mp3');
+    audioRef.current = new Audio('/gamelan-kebogiro.mp3');
     audioRef.current.loop = true;
     audioRef.current.volume = 0.3;
 
