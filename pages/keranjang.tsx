@@ -6,6 +6,7 @@ import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, Award } from 'lucide-reac
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getCartItems, updateCartItemQuantity, removeFromCart } from '@/utils/cartUtils';
+import { Analytics } from "@vercel/analytics/next"
 
 interface CartItem {
   id: number;
@@ -66,6 +67,7 @@ const KeranjangPage = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <Analytics/>
       <Navbar />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">

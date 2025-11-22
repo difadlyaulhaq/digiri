@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Users, School, Mail, Phone, Check, Award, Sparkles, Coffee, Bus, Utensils } from 'lucide-react';
 import Footer from '@/components/Footer';
 import Navbar from '@/components/Navbar';
+import { Analytics } from "@vercel/analytics/next"
 
 const BookingWisataPage = () => {
   // State untuk Form
@@ -119,6 +120,7 @@ const BookingWisataPage = () => {
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
       <Navbar />
+      <Analytics />
 
       {/* Header Hero */}
       <div className="bg-slate-900 text-white relative py-16 overflow-hidden">

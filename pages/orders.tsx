@@ -10,6 +10,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getOrdersByGuestId } from '@/utils/orderUtils';
 import { Order } from '@/utils/orderUtils';
+import { Analytics } from "@vercel/analytics/next"
 
 const OrdersPage = () => {
   const router = useRouter();
@@ -202,6 +203,7 @@ const OrdersPage = () => {
     return (
       <div className="min-h-screen bg-white">
         <Navbar />
+        <Analytics />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
           <div className="bg-red-50 border border-red-200 rounded-3xl p-6 text-center">
             <AlertCircle className="text-red-600 mx-auto mb-4" size={48} />

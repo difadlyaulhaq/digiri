@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import products from '@/data/products';
 import { addToCart } from '@/utils/cartUtils';
+import { Analytics } from "@vercel/analytics/next"
 
 interface ProductColor {
   id: string;
@@ -122,6 +123,7 @@ const ProductDetailPage = () => {
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
+      <Analytics />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}

@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { RotateCcw, Award, Star, Volume2, VolumeX, Clock, Droplets, Target } from 'lucide-react';
+import { Analytics } from "@vercel/analytics/next"
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
 const MencantingGame = () => {
   const [gameState, setGameState] = useState<'idle' | 'playing' | 'finished'>('idle');
@@ -277,6 +280,8 @@ const MencantingGame = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+      <Navbar/>
+      <Analytics/>
       {/* Header */}
       <div className="text-center pt-12 pb-8">
         <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-bold mb-4">
@@ -659,6 +664,7 @@ const MencantingGame = () => {
           </div>
         </div>
       </div>
+      <Footer/>
     </div>
   );
 };

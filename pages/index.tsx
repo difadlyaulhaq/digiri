@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import products from '@/data/products';
+import { Analytics } from "@vercel/analytics/next"
 
 const GiriloyoLanding = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -153,6 +154,8 @@ const GiriloyoLanding = () => {
 
       {/* Navigation */}
       <Navbar />
+      {/* analytic */}
+      <Analytics />
 
       {/* Hero Section - Desa Wisata Focused */}
       <section id="home" className="relative py-12 lg:py-20 px-4 overflow-hidden">

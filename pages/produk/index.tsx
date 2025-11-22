@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Search, Filter, Grid, List, Star, Award, MapPin, ShoppingCart } from 'lucide-react';
+import { Analytics } from "@vercel/analytics/next"
 
 // Data produk (dalam aplikasi nyata ini akan dari API)
 import products from '@/data/products';
@@ -139,6 +140,7 @@ const handleAddToCart = async (product: any) => {
       
       <div className="min-h-screen bg-white">
         <Navbar />
+        <Analytics />
         
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-900 to-slate-900 text-white py-16 lg:py-20">

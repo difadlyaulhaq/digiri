@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import { getCartItems, clearCart } from '@/utils/cartUtils';
 import { createOrder } from '@/utils/orderUtils'; 
 import MidtransScript from '@/components/MidtransScript';
+import { Analytics } from "@vercel/analytics/next"
 
 interface CartItem {
   id: number;
@@ -260,6 +261,7 @@ const CheckoutPage = () => {
     <div className="min-h-screen bg-white">
       
       <Navbar />
+      <Analytics />
       <MidtransScript />
       
       {/* Header */}
