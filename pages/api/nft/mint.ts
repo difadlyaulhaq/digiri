@@ -246,12 +246,13 @@ export default async function handler(
 }
 
 // Fungsi untuk mengirim email konfirmasi NFT BERHASIL
-async function sendNFTConfirmationEmail(
+// In mint.ts - Update the sendNFTConfirmationEmail function
+export async function sendNFTConfirmationEmail(
   customerEmail: string, 
   customerName: string, 
   productName: string, 
   nftId: string
-) {
+): Promise<{ success: boolean; error?: string }> { // Add return type
   try {
     console.log(`📧 Sending NFT confirmation email to: ${customerEmail}`);
 
@@ -321,13 +322,21 @@ async function sendNFTConfirmationEmail(
     
     if (result.success) {
       console.log(`✅ NFT confirmation email sent to: ${customerEmail}`);
+      return { success: true };
     } else {
       console.error(`❌ Failed to send NFT email to: ${customerEmail}`, result.error);
+      return { 
+        success: false, 
+        error: result.error || 'Unknown email error' 
+      };
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error sending NFT confirmation email:', error);
-    // Jangan throw error agar tidak mengganggu proses minting utama
+    return {
+      success: false,
+      error: error.message || 'Failed to send NFT confirmation email'
+    };
   }
 }
 
