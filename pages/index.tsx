@@ -186,19 +186,9 @@ const GiriloyoLanding = () => {
                 {/* PARTNER LOGOS (REVISI PM + Placeholder Fauzan) */}
                 <div className="flex items-center gap-4 opacity-90">
                    {/* Logo 1: UN Tourism */}
-                   <div className="h-10 w-auto relative" title="UN Tourism">
+                   <div className="h-18 w-auto relative" title="UN Tourism">
                       {/* Pastikan file image_edb4a7.png ada di folder public */}
-                      <img src="/un-tourim.png" alt="UN Tourism" className="h-full w-auto object-contain mix-blend-multiply" />
-                   </div>
-                   {/* Logo 2: Wukirsari */}
-                   <div className="h-10 w-auto relative" title="Desa Wukirsari">
-                      {/* Pastikan file image_edb48b.png ada di folder public */}
-                      <img src="/wukir.png" alt="Desa Wukirsari" className="h-full w-auto object-contain mix-blend-multiply" />
-                   </div>
-                   {/* Logo 3: Giriloyo */}
-                   <div className="h-10 w-auto relative" title="Batik Giriloyo">
-                      {/* Pastikan file image_edb4ab.png ada di folder public */}
-                      <img src="/giri.png" alt="Batik Giriloyo" className="h-full w-auto object-contain mix-blend-multiply" />
+                      <img src="/logo-untwo,wukir,giri.png" alt="UN Tourism" className="h-full w-auto object-contain mix-blend-multiply" />
                    </div>
                 </div>
               </div>
@@ -232,21 +222,21 @@ const GiriloyoLanding = () => {
               </div>
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-3 gap-4 pt-8">
+              {/* <div className="grid grid-cols-3 gap-4 pt-8">
                 <div className="text-center">
                   <p className="text-2xl lg:text-3xl font-bold text-blue-900">600 +</p>
                   <p className="text-xs lg:text-sm text-slate-600">Perajin</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl lg:text-3xl font-bold text-blue-900">Bermacam-macam</p>
+                  {/* <p className="text-2xl lg:text-3xl font-bold text-blue-900">Bermacam-macam</p> 
                   <p className="text-xs lg:text-sm text-slate-600">Motif Batik</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl lg:text-3xl font-bold text-blue-900">2K+</p>
                   <p className="text-xs lg:text-sm text-slate-600">Wisatawan</p>
                 </div>
-              </div>
-            </div>
+              </div>*/}
+            </div> 
 
             {/* Hero Image */}
             <div className="flex-1 w-full max-w-md lg:max-w-xl relative">
@@ -319,7 +309,7 @@ const GiriloyoLanding = () => {
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Users className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-lg lg:text-xl font-bold text-slate-800 mb-2">600+ Perajin</h3>
+              {/* <h3 className="text-lg lg:text-xl font-bold text-slate-800 mb-2">600+ Perajin</h3> */}
               <p className="text-sm text-slate-600">Komunitas batik tulis terbesar di Yogyakarta</p>
             </div>
 
@@ -592,7 +582,7 @@ const GiriloyoLanding = () => {
           <div className="text-center mb-12">
             <h2 className="text-3xl lg:text-5xl font-bold text-slate-800 mb-4">
               Bermacam-macam Motif Batik Tulis
-            </h2>
+            </h2> 
             <p className="text-base lg:text-lg text-slate-600 max-w-2xl mx-auto">
               Setiap motif dibuat dengan tangan oleh pengrajin berpengalaman dengan kualitas premium
             </p>
@@ -645,7 +635,6 @@ const GiriloyoLanding = () => {
   />
   
 <section className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10">
-          <h3 className="text-white text-2xl font-bold mb-8 text-center">Variant 3: Quick Actions</h3>
           <div className="max-w-5xl mx-auto text-center text-white relative z-10">
             <div className="inline-block bg-blue-700/30 backdrop-blur-md px-4 py-2 rounded-full text-sm font-bold mb-6 border border-blue-500/30">
               ✨ AI-Powered Recommendations
