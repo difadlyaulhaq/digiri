@@ -10,9 +10,17 @@ const Navbar = () => {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [cartItemCount, setCartItemCount] = useState(0);
+  const [mounted, setMounted] = useState(false);
+  const [currentPath, setCurrentPath] = useState('');
+
+  // Set mounted state and current path after component mounts
+  useEffect(() => {
+    setMounted(true);
+    setCurrentPath(window.location.pathname);
+  }, []);
 
   // Check if current page is home
-  const isHomePage = router.pathname === '/';
+  const isHomePage = mounted && router.pathname === '/';
 
   // Load cart count
   useEffect(() => {
@@ -21,7 +29,9 @@ const Navbar = () => {
       setCartItemCount(count);
     };
 
-    loadCartCount();
+    if (mounted) {
+      loadCartCount();
+    }
 
     const handleCartUpdate = async () => {
       const count = await getCartItemCount();
@@ -33,7 +43,7 @@ const Navbar = () => {
     return () => {
       window.removeEventListener('cartUpdated', handleCartUpdate);
     };
-  }, []);
+  }, [mounted]);
 
   // Handle navigation with hash
   const handleNavClick = (targetId: string) => {
@@ -84,7 +94,15 @@ const Navbar = () => {
     { id: 'eduwisata', label: 'Eduwisata', href: null },
     { id: 'products', label: 'Belanja', href: null },
     { id: 'games', label: 'Games', href: null },
+    { id: 'feedback', label: 'Ulasan', href: '/feedback' },
   ];
+
+  // Helper function to check if link is active
+  const isLinkActive = (href: string | null) => {
+    if (!mounted) return false;
+    if (!href) return false;
+    return currentPath === href || router.pathname === href;
+  };
 
   return (
     <nav className="flex items-center justify-between w-full px-6 py-3 bg-white shadow-sm">
@@ -114,7 +132,7 @@ const Navbar = () => {
                     key={item.id}
                     href={item.href}
                     className={`text-slate-700 hover:text-blue-900 transition font-medium px-3 py-2 rounded-lg hover:bg-blue-50 ${
-                      router.pathname === item.href ? 'text-blue-900 bg-blue-50' : ''
+                      isLinkActive(item.href) ? 'text-blue-900 bg-blue-50' : ''
                     }`}
                   >
                     {item.label}
@@ -158,7 +176,7 @@ const Navbar = () => {
               {/* Cart with counter - Icon Only */}
               <Link href="/keranjang" className="relative text-slate-700 hover:text-blue-900 transition p-2 rounded-lg hover:bg-blue-50">
                 <ShoppingCart size={20} />
-                {cartItemCount > 0 && (
+                {mounted && cartItemCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
                     {cartItemCount}
                   </span>
@@ -172,7 +190,7 @@ const Navbar = () => {
             {/* Cart Icon for mobile */}
             <Link href="/keranjang" className="relative p-2">
               <ShoppingCart size={24} className="text-blue-900" />
-              {cartItemCount > 0 && (
+              {mounted && cartItemCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
                   {cartItemCount}
                 </span>
@@ -200,7 +218,7 @@ const Navbar = () => {
                     key={item.id}
                     href={item.href}
                     className={`block py-3 text-slate-700 hover:text-blue-900 hover:bg-blue-50 rounded-lg px-4 transition font-medium ${
-                      router.pathname === item.href ? 'text-blue-900 bg-blue-50' : ''
+                      isLinkActive(item.href) ? 'text-blue-900 bg-blue-50' : ''
                     }`}
                     onClick={() => setMenuOpen(false)}
                   >
