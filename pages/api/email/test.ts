@@ -1,4 +1,4 @@
-// pages/api/email/test.ts
+// pages/api/email/test.ts - DIPERBAIKI
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { sendEmail } from '@/lib/email';
 
@@ -6,11 +6,12 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== 'POST') {
+  // Terima kedua method GET dan POST untuk testing
+  if (req.method !== 'POST' && req.method !== 'GET') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  const { to } = req.body;
+  const { to } = req.method === 'POST' ? req.body : req.query;
 
   try {
     console.log('🔄 Testing email service...');

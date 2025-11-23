@@ -1,4 +1,4 @@
-// pages/api/nft/mock-mint.ts - IMPROVED dengan email fix
+// pages/api/nft/mock-mint.ts - DIPERBAIKI
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { updateNFTStatus, getOrderById } from '@/utils/orderUtils';
 import { sendEmail } from '@/lib/email';
@@ -19,10 +19,13 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== 'POST') {
+  // Terima kedua method GET dan POST
+  if (req.method !== 'POST' && req.method !== 'GET') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
+  // Untuk GET, ambil orderId dari query string
+  // Untuk POST, ambil dari body
   const { 
     orderId, 
     customerEmail, 
@@ -33,16 +36,16 @@ export default async function handler(
     location,
     motif,
     processingTime
-  }: MockMintRequest = req.body;
+  } = req.method === 'POST' ? req.body : req.query;
 
   try {
     console.log('🎭 Creating mock NFT for order:', orderId);
 
     // Validasi input
-    if (!orderId) {
+    if (!orderId || typeof orderId !== 'string') {
       return res.status(400).json({
         success: false,
-        error: 'Order ID is required'
+        error: 'Valid Order ID is required'
       });
     }
 
@@ -54,6 +57,12 @@ export default async function handler(
         error: 'Order not found'
       });
     }
+
+    console.log('📦 Order found:', {
+      orderId: order.orderId,
+      customerEmail: order.shippingAddress.email,
+      customerName: order.shippingAddress.name
+    });
 
     // Gunakan data dari order jika tidak disediakan di request
     const finalCustomerEmail = customerEmail || order.shippingAddress.email;
@@ -93,6 +102,7 @@ export default async function handler(
     console.log('💾 Mock NFT saved to database for order:', orderId);
 
     // Kirim email konfirmasi NFT
+    console.log('📧 Attempting to send NFT email to:', finalCustomerEmail);
     const emailResult = await sendNFTConfirmationEmail(
       finalCustomerEmail, 
       finalCustomerName, 
@@ -100,6 +110,8 @@ export default async function handler(
       mockNftId,
       mockTransactionHash
     );
+
+    console.log('📧 Email result:', emailResult);
 
     if (!emailResult.success) {
       console.error('❌ Failed to send NFT email:', emailResult.error);
@@ -112,6 +124,7 @@ export default async function handler(
       transactionHash: mockTransactionHash,
       contractAddress: mockContractAddress,
       emailSent: emailResult.success,
+      customerEmail: finalCustomerEmail,
       message: 'Mock NFT berhasil dibuat (Development Mode)',
       note: 'Ini adalah NFT mock untuk development'
     });
@@ -121,7 +134,7 @@ export default async function handler(
     
     // Try to update status to failed
     try {
-      await updateNFTStatus(orderId, 'failed');
+      await updateNFTStatus(orderId as string, 'failed');
     } catch (dbError) {
       console.error('Error updating NFT status to failed:', dbError);
     }
@@ -134,7 +147,7 @@ export default async function handler(
   }
 }
 
-// Fungsi untuk mengirim email konfirmasi NFT
+// Fungsi untuk mengirim email konfirmasi NFT (tetap sama)
 async function sendNFTConfirmationEmail(
   customerEmail: string, 
   customerName: string, 
