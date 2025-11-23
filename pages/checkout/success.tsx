@@ -1,7 +1,7 @@
-// pages/checkout/success.tsx
+// pages/checkout/success.tsx - IMPROVED VERSION
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { CheckCircle, Award, Mail, ExternalLink, Sparkles } from 'lucide-react';
+import { CheckCircle, Award, Mail, ExternalLink, Sparkles, Loader, AlertCircle } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -10,16 +10,17 @@ const CheckoutSuccess = () => {
   const { order_id, transaction_status, transaction_id } = router.query;
   const [order, setOrder] = useState<any>(null);
   const [nftStatus, setNftStatus] = useState<'minting' | 'minted' | 'failed'>('minting');
+  const [nftData, setNftData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (order_id) {
-      // Fetch order details
       fetchOrderDetails(order_id as string);
       
       // Check NFT status periodically
       const interval = setInterval(() => {
         checkNFTStatus(order_id as string);
-      }, 5000);
+      }, 3000); // Check every 3 seconds
 
       return () => clearInterval(interval);
     }
@@ -27,20 +28,79 @@ const CheckoutSuccess = () => {
 
   const fetchOrderDetails = async (orderId: string) => {
     try {
-      // Implementasi fetch order details dari database
-      console.log('Fetching order details:', orderId);
+      const response = await fetch(`/api/order/details?orderId=${orderId}`);
+      if (response.ok) {
+        const orderData = await response.json();
+        setOrder(orderData);
+        
+        // Check current NFT status
+        if (orderData.nftStatus === 'minted' && orderData.nftIds && orderData.nftIds.length > 0) {
+          setNftStatus('minted');
+          setNftData({
+            nftId: orderData.nftIds[0],
+            transactionHash: orderData.nftTransactionHash
+          });
+        } else if (orderData.nftStatus === 'failed') {
+          setNftStatus('failed');
+        }
+      }
     } catch (error) {
       console.error('Error fetching order details:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const checkNFTStatus = async (orderId: string) => {
+    if (nftStatus === 'minted' || nftStatus === 'failed') {
+      return; // Stop checking if already minted or failed
+    }
+
     try {
-      // Implementasi check NFT status
-      // Jika NFT sudah ready, set nftStatus ke 'minted'
-      setNftStatus('minted');
+      const response = await fetch(`/api/order/details?orderId=${orderId}`);
+      if (response.ok) {
+        const orderData = await response.json();
+        
+        if (orderData.nftStatus === 'minted' && orderData.nftIds && orderData.nftIds.length > 0) {
+          setNftStatus('minted');
+          setNftData({
+            nftId: orderData.nftIds[0],
+            transactionHash: orderData.nftTransactionHash
+          });
+        } else if (orderData.nftStatus === 'failed') {
+          setNftStatus('failed');
+        }
+      }
     } catch (error) {
       console.error('Error checking NFT status:', error);
+    }
+  };
+
+  const triggerManualMint = async () => {
+    try {
+      setNftStatus('minting');
+      const response = await fetch('/api/nft/mock-mint', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: order_id
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setNftStatus('minted');
+        setNftData({
+          nftId: result.nftId,
+          transactionHash: result.transactionHash
+        });
+      } else {
+        setNftStatus('failed');
+      }
+    } catch (error) {
+      console.error('Error triggering manual mint:', error);
       setNftStatus('failed');
     }
   };
@@ -67,7 +127,7 @@ const CheckoutSuccess = () => {
           {/* Order Info */}
           <div className="bg-slate-50 rounded-xl p-6 mb-8 border border-slate-200">
             <h2 className="text-xl font-bold text-slate-800 mb-4">
-              Informasi Pesanan Premium
+              Informasi Pesanan
             </h2>
             <div className="grid md:grid-cols-2 gap-4 text-left">
               <div>
@@ -90,7 +150,16 @@ const CheckoutSuccess = () => {
               </h2>
             </div>
             
-            {nftStatus === 'minting' && (
+            {loading ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-center gap-2">
+                  <Loader className="w-4 h-4 animate-spin text-blue-600" />
+                  <p className="text-blue-900 font-semibold">
+                    Memeriksa status NFT...
+                  </p>
+                </div>
+              </div>
+            ) : nftStatus === 'minting' && (
               <div className="space-y-4">
                 <div className="flex items-center justify-center gap-2">
                   <div className="w-4 h-4 border-2 border-amber-600 border-t-transparent rounded-full animate-spin"></div>
@@ -101,6 +170,14 @@ const CheckoutSuccess = () => {
                 <p className="text-slate-600 text-sm">
                   Sertifikat keaslian digital heritage sedang diproses dan akan dikirim ke email Anda
                 </p>
+                <div className="mt-4">
+                  <button 
+                    onClick={triggerManualMint}
+                    className="bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 transition text-sm"
+                  >
+                    Trigger Manual Mint (Development)
+                  </button>
+                </div>
               </div>
             )}
             
@@ -112,24 +189,44 @@ const CheckoutSuccess = () => {
                     Sertifikat Digital Berhasil Dicetak!
                   </p>
                 </div>
+                <div className="bg-white rounded-lg p-4 border border-green-200">
+                  <p className="text-sm text-slate-600 mb-2">
+                    <strong>NFT ID:</strong> {nftData?.nftId}
+                  </p>
+                  <p className="text-sm text-slate-600">
+                    <strong>Transaction Hash:</strong> {nftData?.transactionHash}
+                  </p>
+                </div>
                 <p className="text-slate-600 text-sm">
                   Sertifikat keaslian digital heritage telah dikirim ke email Anda
                 </p>
-                <button className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-3 rounded-lg hover:shadow-xl transition flex items-center gap-2 mx-auto shadow-lg hover:shadow-amber-500/25">
+                <button 
+                  onClick={() => window.open('https://mail.google.com', '_blank')}
+                  className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-3 rounded-lg hover:shadow-xl transition flex items-center gap-2 mx-auto shadow-lg hover:shadow-amber-500/25"
+                >
                   <Mail size={16} />
-                  Lihat di Email
+                  Buka Email
                 </button>
               </div>
             )}
             
             {nftStatus === 'failed' && (
               <div className="space-y-4">
-                <p className="text-red-700 font-semibold">
-                  Gagal mencetak sertifikat digital
-                </p>
+                <div className="flex items-center justify-center gap-2">
+                  <AlertCircle size={20} className="text-red-500" />
+                  <p className="text-red-700 font-semibold">
+                    Gagal mencetak sertifikat digital
+                  </p>
+                </div>
                 <p className="text-slate-600 text-sm">
-                  Tim premium kami akan menghubungi Anda untuk proses lebih lanjut
+                  Tim kami akan menghubungi Anda untuk proses lebih lanjut
                 </p>
+                <button 
+                  onClick={triggerManualMint}
+                  className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition"
+                >
+                  Coba Lagi
+                </button>
               </div>
             )}
           </div>
@@ -155,8 +252,8 @@ const CheckoutSuccess = () => {
           <div className="text-center mt-8 pt-6 border-t border-slate-200">
             <p className="text-sm text-slate-500">
               Butuh bantuan?{' '}
-              <a href="mailto:support@giriloyo.com" className="text-blue-700 hover:underline font-medium">
-                Hubungi Customer Service Premium
+              <a href="mailto:difadlyaulhaq2@gmail.com" className="text-blue-700 hover:underline font-medium">
+                Hubungi Customer Service
               </a>
             </p>
           </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { ShoppingBag, MapPin, User, Mail, Phone, CreditCard, Shield, Award, CheckCircle, Sparkles } from 'lucide-react';
+import { ShoppingBag, MapPin, User, Mail, Phone, CreditCard, Shield, Award, CheckCircle, Sparkles, Loader } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getCartItems, clearCart } from '@/utils/cartUtils';
@@ -44,6 +44,7 @@ const CheckoutPage = () => {
     postalCode: '',
     notes: ''
   });
+  const [isProcessing, setIsProcessing] = useState(false); // State untuk mencegah double click
 
   // Load cart items from cartUtils
   useEffect(() => {
@@ -91,248 +92,309 @@ const CheckoutPage = () => {
   };
 
   const handlePayment = async () => {
-  try {
-    // Generate order ID
-    const orderId = `GRLYO-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-    
-    console.log('🔄 Memulai proses pembayaran Midtrans...');
-
-    // Prepare NFT data untuk setiap item
-    const nftItems = cartItems.map(item => ({
-      productName: item.name,
-      productImage: item.image,
-      artisan: "Pengrajin Giriloyo", // Bisa diambil dari product data
-      location: "Desa Giriloyo, Yogyakarta",
-      motif: item.name.split('Motif ')[1] || item.name,
-      processingTime: "14-21 hari"
-    }));
-
-    // Prepare data for Midtrans
-    const paymentData = {
-      orderId: orderId,
-      amount: total,
-      shipping: shipping,
-      nftFee: nftFee,
-      customerDetails: {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        address: formData.address,
-        city: formData.city,
-        province: formData.province,
-        postalCode: formData.postalCode
-      },
-      items: cartItems.map(item => ({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        size: item.size,
-        color: item.color
-      })),
-      nftItems: nftItems // Data tambahan untuk NFT
-    };
-
-    console.log('📦 Payment data:', {
-      orderId: paymentData.orderId,
-      amount: paymentData.amount,
-      shipping: paymentData.shipping,
-      nftFee: paymentData.nftFee,
-      items: paymentData.items,
-      nftItems: paymentData.nftItems,
-      itemsTotal: paymentData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-    });
-
-    // Create order dengan status pending terlebih dahulu
-    const order = await createOrder(
-      cartItems,
-      formData,
-      subtotal,
-      shipping,
-      nftFee,
-      total,
-      undefined, // NFT hash akan diisi nanti oleh webhook
-      undefined, // paymentMethod
-      'pending', // status awal
-      undefined  // transactionId
-    );
-
-    console.log('✅ Order created dengan status pending:', order.orderId);
-
-    // Create payment transaction
-    const response = await fetch('/api/payment/create', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(paymentData),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Gagal membuat transaksi pembayaran');
+    // Cegah double click
+    if (isProcessing) {
+      console.log('🔄 Proses pembayaran sedang berjalan, tunggu...');
+      return;
     }
 
-    const paymentResult = await response.json();
-    
-    console.log('✅ Token Midtrans diterima:', paymentResult.token);
+    try {
+      setIsProcessing(true); // Mulai proses, nonaktifkan tombol
 
-    // Open Midtrans payment popup
-    if (typeof window !== 'undefined' && (window as any).snap) {
-      (window as any).snap.pay(paymentResult.token, {
-        onSuccess: async function(result: any) {
-          console.log('💰 Pembayaran berhasil:', result);
-          
-          try {
-            // Update order status to paid
-            const updatedOrder = await createOrder(
-              cartItems,
-              formData,
-              subtotal,
-              shipping,
-              nftFee,
-              total,
-              undefined, // NFT hash akan diisi oleh webhook
-              result.payment_type,
-              'settlement',
-              result.transaction_id
-            );
+      // Generate order ID
+      const orderId = `GRLYO-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+      
+      console.log('🔄 Memulai proses pembayaran Midtrans...');
 
-            console.log('✅ Order updated to paid:', updatedOrder.orderId);
+      // Prepare NFT data untuk setiap item
+      const nftItems = cartItems.map(item => ({
+        productName: item.name,
+        productImage: item.image,
+        artisan: "Pengrajin Giriloyo",
+        location: "Desa Giriloyo, Yogyakarta",
+        motif: item.name.split('Motif ')[1] || item.name,
+        processingTime: "14-21 hari"
+      }));
 
-            // Trigger NFT minting untuk pembayaran yang sukses
-            await triggerNFTMinting(updatedOrder, nftItems);
-
-            // Clear cart after successful payment
-            await clearCart();
-            
-            // Redirect ke halaman success
-            router.push(`/checkout/success?order_id=${updatedOrder.orderId}&transaction_status=settlement&transaction_id=${result.transaction_id}`);
-            
-          } catch (error) {
-            console.error('❌ Error updating order:', error);
-            // Fallback: redirect ke success page dengan data minimal
-            router.push(`/checkout/success?order_id=${orderId}&transaction_status=settlement`);
-          }
+      // Prepare data for Midtrans
+      const paymentData = {
+        orderId: orderId,
+        amount: total,
+        shipping: shipping,
+        nftFee: nftFee,
+        customerDetails: {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          city: formData.city,
+          province: formData.province,
+          postalCode: formData.postalCode
         },
-        onPending: async function(result: any) {
-          console.log('⏳ Pembayaran pending:', result);
-          
-          try {
-            // Update order status to pending
-            const updatedOrder = await createOrder(
-              cartItems,
-              formData,
-              subtotal,
-              shipping,
-              nftFee,
-              total,
-              undefined, // NFT hash akan diisi nanti jika pembayaran sukses
-              result.payment_type,
-              'pending',
-              result.transaction_id
-            );
-
-            console.log('✅ Order updated to pending:', updatedOrder.orderId);
-            
-            // Redirect ke halaman pending
-            router.push(`/checkout/pending?order_id=${updatedOrder.orderId}&transaction_status=pending&transaction_id=${result.transaction_id}`);
-            
-          } catch (error) {
-            console.error('❌ Error updating pending order:', error);
-            // Fallback: redirect ke pending page dengan data minimal
-            router.push(`/checkout/pending?order_id=${orderId}&transaction_status=pending`);
-          }
-        },
-        onError: function(result: any) {
-          console.log('❌ Error pembayaran:', result);
-          // Update order status to failed
-          updateOrderStatus(orderId, 'cancelled').catch(console.error);
-          // Redirect ke halaman error
-          router.push(`/checkout/error?order_id=${orderId}&transaction_status=error&error_message=${encodeURIComponent('Pembayaran gagal atau ditolak')}`);
-        },
-        onClose: function() {
-          console.log('🔒 Popup pembayaran ditutup');
-          // User closed the popup without finishing the payment
-          alert('Pembayaran dibatalkan. Silakan coba lagi jika ingin melanjutkan.');
-        }
-      });
-    } else {
-      throw new Error('Midtrans SDK tidak terload');
-    }
-
-  } catch (error: any) {
-    console.error('❌ Error dalam proses pembayaran:', error);
-    alert(`Gagal memproses pembayaran: ${error.message}`);
-  }
-};
-
-// Fungsi untuk trigger NFT minting
-const triggerNFTMinting = async (order: any, nftItems: any[]) => {
-  try {
-    console.log('🎨 Starting NFT minting process...');
-    
-    // Untuk setiap item, mint NFT terpisah
-    const nftPromises = nftItems.map(async (nftItem, index) => {
-      const nftData = {
-        orderId: order.orderId,
-        customerEmail: order.shippingAddress.email,
-        customerName: order.shippingAddress.name,
-        productName: nftItem.productName,
-        productImage: nftItem.productImage,
-        artisan: nftItem.artisan,
-        location: nftItem.location,
-        motif: nftItem.motif,
-        processingTime: nftItem.processingTime
+        items: cartItems.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          size: item.size,
+          color: item.color
+        })),
+        nftItems: nftItems
       };
 
-      console.log(`🔄 Minting NFT for item ${index + 1}: ${nftItem.productName}`);
+      console.log('📦 Payment data:', {
+        orderId: paymentData.orderId,
+        amount: paymentData.amount,
+        shipping: paymentData.shipping,
+        nftFee: paymentData.nftFee,
+        items: paymentData.items,
+        nftItems: paymentData.nftItems,
+        itemsTotal: paymentData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+      });
 
-      try {
-        const mintResponse = await fetch('/api/nft/mint', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(nftData),
-        });
+      // Create order dengan status pending terlebih dahulu
+      const order = await createOrder(
+        cartItems,
+        formData,
+        subtotal,
+        shipping,
+        nftFee,
+        total
+      );
 
-        if (mintResponse.ok) {
-          const result = await mintResponse.json();
-          console.log(`✅ NFT minted successfully: ${result.nftId}`);
-          return { success: true, nftId: result.nftId, transactionHash: result.transactionHash };
-        } else {
-          const error = await mintResponse.json();
-          console.error(`❌ NFT minting failed: ${error.error}`);
-          return { success: false, error: error.error };
-        }
-      } catch (mintError) {
-        console.error(`❌ NFT minting error: ${mintError}`);
-        return { success: false, error: mintError };
+      console.log('✅ Order created dengan status pending:', order.orderId);
+
+      // Create payment transaction
+      const response = await fetch('/api/payment/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(paymentData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Gagal membuat transaksi pembayaran');
       }
-    });
 
-    // Tunggu semua proses minting selesai
-    const nftResults = await Promise.all(nftPromises);
-    
-    // Log hasil minting
-    const successfulMints = nftResults.filter(result => result.success);
-    const failedMints = nftResults.filter(result => !result.success);
-    
-    console.log(`📊 NFT Minting Summary: ${successfulMints.length} success, ${failedMints.length} failed`);
-    
-    if (failedMints.length > 0) {
-      console.error('❌ Some NFTs failed to mint:', failedMints);
-      // Bisa kirim notifikasi ke admin di sini
+      const paymentResult = await response.json();
+      
+      console.log('✅ Token Midtrans diterima:', paymentResult.token);
+
+      // Tunggu sebentar untuk memastikan Snap.js sudah siap
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Open Midtrans payment popup
+      if (typeof window !== 'undefined' && (window as any).snap) {
+        (window as any).snap.pay(paymentResult.token, {
+          onSuccess: async function(result: any) {
+            console.log('💰 Pembayaran berhasil:', result);
+            
+            try {
+              // Update order status to paid menggunakan updateOrderStatus
+              const updateSuccess = await updateOrderStatus(order.orderId, 'paid');
+              
+              if (updateSuccess) {
+                console.log('✅ Order status updated to paid:', order.orderId);
+
+                // Trigger NFT minting untuk pembayaran yang sukses - GUNAKAN MOCK UNTUK SEKARANG
+                await triggerMockNFTMinting(order, nftItems);
+
+                // Clear cart after successful payment
+                await clearCart();
+                
+                // Redirect ke halaman success
+                router.push(`/checkout/success?order_id=${order.orderId}&transaction_status=settlement&transaction_id=${result.transaction_id}`);
+              } else {
+                throw new Error('Gagal update status order');
+              }
+              
+            } catch (error) {
+              console.error('❌ Error updating order:', error);
+              // Fallback: redirect ke success page dengan data minimal
+              router.push(`/checkout/success?order_id=${orderId}&transaction_status=settlement`);
+            } finally {
+              setIsProcessing(false);
+            }
+          },
+          onPending: async function(result: any) {
+            console.log('⏳ Pembayaran pending:', result);
+            
+            try {
+              // Update order status tetap pending (tidak perlu update karena sudah pending)
+              console.log('✅ Order tetap dalam status pending:', order.orderId);
+              
+              // Redirect ke halaman pending
+              router.push(`/checkout/pending?order_id=${order.orderId}&transaction_status=pending&transaction_id=${result.transaction_id}`);
+              
+            } catch (error) {
+              console.error('❌ Error updating pending order:', error);
+              // Fallback: redirect ke pending page dengan data minimal
+              router.push(`/checkout/pending?order_id=${orderId}&transaction_status=pending`);
+            } finally {
+              setIsProcessing(false);
+            }
+          },
+          onError: function(result: any) {
+            console.log('❌ Error pembayaran:', result);
+            // Update order status to failed
+            updateOrderStatus(orderId, 'cancelled').catch(console.error);
+            // Redirect ke halaman error
+            router.push(`/checkout/error?order_id=${orderId}&transaction_status=error&error_message=${encodeURIComponent('Pembayaran gagal atau ditolak')}`);
+            setIsProcessing(false);
+          },
+          onClose: function() {
+            console.log('🔒 Popup pembayaran ditutup');
+            // User closed the popup without finishing the payment
+            alert('Pembayaran dibatalkan. Silakan coba lagi jika ingin melanjutkan.');
+            setIsProcessing(false);
+          }
+        });
+      } else {
+        throw new Error('Midtrans SDK tidak terload');
+      }
+
+    } catch (error: any) {
+      console.error('❌ Error dalam proses pembayaran:', error);
+      alert(`Gagal memproses pembayaran: ${error.message}`);
+      setIsProcessing(false);
     }
+  };
 
-    return nftResults;
-    
-  } catch (error) {
-    console.error('❌ Error in triggerNFTMinting:', error);
-    throw error;
-  }
-};
+  // Fungsi untuk trigger MOCK NFT minting
+  const triggerMockNFTMinting = async (order: any, nftItems: any[]) => {
+    try {
+      console.log('🎭 Starting MOCK NFT minting process...');
+      
+      // Untuk setiap item, mint NFT terpisah menggunakan MOCK
+      const nftPromises = nftItems.map(async (nftItem, index) => {
+        const nftData = {
+          orderId: order.orderId,
+          customerEmail: order.shippingAddress.email,
+          customerName: order.shippingAddress.name,
+          productName: nftItem.productName,
+          productImage: nftItem.productImage,
+          artisan: nftItem.artisan,
+          location: nftItem.location,
+          motif: nftItem.motif,
+          processingTime: nftItem.processingTime
+        };
+
+        console.log(`🔄 Mock minting NFT for item ${index + 1}: ${nftItem.productName}`);
+
+        try {
+          // Gunakan endpoint mock-mint untuk development
+          const mintResponse = await fetch('/api/nft/mock-mint', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(nftData),
+          });
+
+          if (mintResponse.ok) {
+            const result = await mintResponse.json();
+            console.log(`✅ Mock NFT minted successfully: ${result.nftId}`);
+            return { success: true, nftId: result.nftId, transactionHash: result.transactionHash };
+          } else {
+            const error = await mintResponse.json();
+            console.error(`❌ Mock NFT minting failed: ${error.error}`);
+            return { success: false, error: error.error };
+          }
+        } catch (mintError) {
+          console.error(`❌ Mock NFT minting error: ${mintError}`);
+          return { success: false, error: mintError };
+        }
+      });
+
+      // Tunggu semua proses minting selesai
+      const nftResults = await Promise.all(nftPromises);
+      
+      // Log hasil minting
+      const successfulMints = nftResults.filter(result => result.success);
+      const failedMints = nftResults.filter(result => !result.success);
+      
+      console.log(`📊 Mock NFT Minting Summary: ${successfulMints.length} success, ${failedMints.length} failed`);
+      
+      if (failedMints.length > 0) {
+        console.error('❌ Some Mock NFTs failed to mint:', failedMints);
+        // Bisa kirim notifikasi ke admin di sini
+      }
+
+      return nftResults;
+      
+    } catch (error) {
+      console.error('❌ Error in triggerMockNFTMinting:', error);
+      throw error;
+    }
+  };
+
+  // Fungsi untuk trigger REAL NFT minting (untuk future use)
+  const triggerRealNFTMinting = async (order: any, nftItems: any[]) => {
+    try {
+      console.log('🎨 Starting REAL NFT minting process...');
+      
+      // Untuk setiap item, mint NFT terpisah
+      const nftPromises = nftItems.map(async (nftItem, index) => {
+        const nftData = {
+          orderId: order.orderId,
+          customerEmail: order.shippingAddress.email,
+          customerName: order.shippingAddress.name,
+          productName: nftItem.productName,
+          productImage: nftItem.productImage,
+          artisan: nftItem.artisan,
+          location: nftItem.location,
+          motif: nftItem.motif,
+          processingTime: nftItem.processingTime
+        };
+
+        console.log(`🔄 Real minting NFT for item ${index + 1}: ${nftItem.productName}`);
+
+        try {
+          const mintResponse = await fetch('/api/nft/mint', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(nftData),
+          });
+
+          if (mintResponse.ok) {
+            const result = await mintResponse.json();
+            console.log(`✅ Real NFT minted successfully: ${result.nftId}`);
+            return { success: true, nftId: result.nftId, transactionHash: result.transactionHash };
+          } else {
+            const error = await mintResponse.json();
+            console.error(`❌ Real NFT minting failed: ${error.error}`);
+            return { success: false, error: error.error };
+          }
+        } catch (mintError) {
+          console.error(`❌ Real NFT minting error: ${mintError}`);
+          return { success: false, error: mintError };
+        }
+      });
+
+      // Tunggu semua proses minting selesai
+      const nftResults = await Promise.all(nftPromises);
+      
+      // Log hasil minting
+      const successfulMints = nftResults.filter(result => result.success);
+      const failedMints = nftResults.filter(result => !result.success);
+      
+      console.log(`📊 Real NFT Minting Summary: ${successfulMints.length} success, ${failedMints.length} failed`);
+      
+      if (failedMints.length > 0) {
+        console.error('❌ Some Real NFTs failed to mint:', failedMints);
+      }
+
+      return nftResults;
+      
+    } catch (error) {
+      console.error('❌ Error in triggerRealNFTMinting:', error);
+      throw error;
+    }
+  };
 
   // Hapus step 3 dari komponen ini karena sekarang di-handle oleh halaman terpisah
   if (cartItems.length === 0) {
@@ -555,9 +617,19 @@ const triggerNFTMinting = async (order: any, nftItems: any[]) => {
 
                 <button
                   onClick={handlePayment}
-                  className="w-full bg-gradient-to-r from-blue-900 to-slate-900 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl transition text-lg"
+                  disabled={isProcessing}
+                  className={`w-full bg-gradient-to-r from-blue-900 to-slate-900 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl transition text-lg flex items-center justify-center gap-3 ${
+                    isProcessing ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 >
-                  Bayar Sekarang - {formatPrice(total)}
+                  {isProcessing ? (
+                    <>
+                      <Loader className="animate-spin" size={20} />
+                      Memproses Pembayaran...
+                    </>
+                  ) : (
+                    `Bayar Sekarang - ${formatPrice(total)}`
+                  )}
                 </button>
               </div>
             )}

@@ -310,7 +310,7 @@ export async function sendNFTConfirmationEmail(
             <div class="footer">
               <p>Terima kasih telah mendukung pengrajin batik tradisional Giriloyo! 🎨</p>
               <p>Batik Giriloyo - Desa Giriloyo, Yogyakarta</p>
-              <p>Email: nft@giriloyo-batik.com | Website: https://giriloyo-batik.com</p>
+              <p>Email: difadlyaulhaq2@gmail.com | Website: https://digiri.vercel.app/ </p>
             </div>
           </div>
         </body>
@@ -382,7 +382,7 @@ async function sendNFTFailedEmail(
             </div>
             <div class="footer">
               <p>Batik Giriloyo - Melestarikan Seni Batik Tradisional</p>
-              <p>Email: support@giriloyo-batik.com</p>
+              <p>Email: difadlyaulhaq2@gmail.com</p>
             </div>
           </div>
         </body>
