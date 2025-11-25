@@ -2,13 +2,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { 
-  Sparkles, Send, User, Bot, ShoppingBag, RotateCcw, 
+  Sparkles, Send, User, Bot, RotateCcw, 
   ArrowLeft
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import products from '@/data/products';
 import { Analytics } from "@vercel/analytics/next"
+// 1. IMPORT LIBRARY MARKDOWN
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Message {
   id: string;
@@ -22,9 +24,18 @@ const AIChatPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  // Ref untuk auto-scroll
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Initial greeting from AI
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Initial greeting
   useEffect(() => {
     setMessages([{
       id: '1',
@@ -50,35 +61,26 @@ const AIChatPage = () => {
     setIsLoading(true);
 
     try {
-      console.log('👤 Mengirim pesan ke API Route:', inputMessage);
-      
       const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: inputMessage }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to get response from server');
-      }
+      if (!response.ok) throw new Error('Failed to get response');
 
       const data = await response.json();
-      const aiResponseText = data.response;
-
-      console.log('🤖 Respon diterima dari API Route:', aiResponseText);
       
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: aiResponseText,
+        content: data.response,
         isUser: false,
         timestamp: new Date(),
       };
 
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Error:', error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: 'Maaf, terjadi kesalahan sistem. Silakan refresh halaman dan coba lagi.',
@@ -106,8 +108,8 @@ const AIChatPage = () => {
     "Apa itu desa wisata batik Giriloyo?",
     "Proses pembuatan batik tulis",
     "Apa itu NFT certificate?",
-    "apa motif batik yang paling populer?",
-    "bagaimana cara merawat batik tulis?",
+    "Apa motif batik yang paling populer?",
+    "Bagaimana cara merawat batik tulis?",
   ];
 
   return (
@@ -127,7 +129,7 @@ const AIChatPage = () => {
           
           <div className="flex-1">
             <h1 className="text-3xl font-bold text-stone-800 flex items-center gap-3">
-              <div className="w-12 h-12 bg-linear-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
                 <Sparkles className="text-white" size={24} />
               </div>
               AI Batik Assistant
@@ -148,7 +150,6 @@ const AIChatPage = () => {
         <div className="grid lg:grid-cols-4 gap-6">
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-4">
-            {/* Quick Questions */}
             <div className="bg-white rounded-2xl p-4 shadow-lg">
               <h3 className="font-bold text-stone-800 mb-3 flex items-center gap-2">
                 <Sparkles size={16} />
@@ -170,24 +171,42 @@ const AIChatPage = () => {
 
           {/* Chat Container */}
           <div className="lg:col-span-3">
-            <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-              {/* Messages */}
-              <div className="h-[500px] overflow-y-auto p-4 space-y-4">
+            <div className="bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col h-[600px]">
+              {/* Messages Area */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {messages.map((message) => (
                   <div key={message.id} className={`flex gap-3 ${message.isUser ? 'justify-end' : 'justify-start'}`}>
                     {!message.isUser && (
-                      <div className="w-8 h-8 bg-linear-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center shrink-0">
+                      <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center shrink-0">
                         <Bot size={16} className="text-white" />
                       </div>
                     )}
                     
-                    <div className={`max-w-[80%] ${message.isUser ? 'order-first' : ''}`}>
+                    <div className={`max-w-[85%] ${message.isUser ? 'order-first' : ''}`}>
                       <div className={`rounded-2xl p-4 ${
                         message.isUser 
-                          ? 'bg-linear-to-r from-amber-500 to-amber-600 text-white' 
+                          ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white' 
                           : 'bg-stone-100 text-stone-800'
                       }`}>
-                        <div className="whitespace-pre-wrap">{message.content}</div>
+                        
+                        {/* 2. IMPLEMENTASI REACT MARKDOWN */}
+                        <div className="prose prose-sm max-w-none break-words">
+                          <ReactMarkdown 
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              // Kustomisasi elemen HTML agar styling Tailwind tetap rapi
+                              p: ({node, ...props}) => <p className={`mb-2 last:mb-0 ${message.isUser ? 'text-white' : 'text-stone-800'}`} {...props} />,
+                              strong: ({node, ...props}) => <strong className="font-bold" {...props} />,
+                              ul: ({node, ...props}) => <ul className="list-disc ml-4 mb-2 space-y-1" {...props} />,
+                              ol: ({node, ...props}) => <ol className="list-decimal ml-4 mb-2 space-y-1" {...props} />,
+                              li: ({node, ...props}) => <li className="" {...props} />,
+                              a: ({node, ...props}) => <a className="underline hover:opacity-80" target="_blank" rel="noopener noreferrer" {...props} />,
+                            }}
+                          >
+                            {message.content}
+                          </ReactMarkdown>
+                        </div>
+
                       </div>
                       <div className={`text-xs text-stone-500 mt-1 ${message.isUser ? 'text-right' : 'text-left'}`}>
                         {message.timestamp.toLocaleTimeString('id-ID', { 
@@ -207,7 +226,7 @@ const AIChatPage = () => {
                 
                 {isLoading && (
                   <div className="flex gap-3 justify-start">
-                    <div className="w-8 h-8 bg-linear-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
                       <Bot size={16} className="text-white" />
                     </div>
                     <div className="bg-stone-100 rounded-2xl p-4">
@@ -219,10 +238,12 @@ const AIChatPage = () => {
                     </div>
                   </div>
                 )}
+                {/* Invisible element to scroll to */}
+                <div ref={messagesEndRef} />
               </div>
 
               {/* Input Form */}
-              <form onSubmit={handleSendMessage} className="border-t border-stone-200 p-4">
+              <form onSubmit={handleSendMessage} className="border-t border-stone-200 p-4 bg-white z-10">
                 <div className="flex gap-3">
                   <input
                     type="text"
@@ -235,7 +256,7 @@ const AIChatPage = () => {
                   <button
                     type="submit"
                     disabled={isLoading || !inputMessage.trim()}
-                    className="bg-linear-to-r from-purple-500 to-pink-500 text-white w-12 h-12 rounded-full flex items-center justify-center hover:shadow-lg transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white w-12 h-12 rounded-full flex items-center justify-center hover:shadow-lg transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Send size={20} />
                   </button>
