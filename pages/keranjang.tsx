@@ -127,14 +127,14 @@ const KeranjangPage = () => {
                           <div className="flex items-center gap-3">
                             <button
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition"
+                              className="w-8 h-8 text-black bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition"
                             >
                               <Minus size={16} />
                             </button>
-                            <span className="font-semibold w-8 text-center">{item.quantity}</span>
+                            <span className="font-semibold text-black w-8 text-center">{item.quantity}</span>
                             <button
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition"
+                              className="w-8 h-8 text-black bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition"
                             >
                               <Plus size={16} />
                             </button>

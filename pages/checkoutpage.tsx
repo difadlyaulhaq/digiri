@@ -459,7 +459,7 @@ const CheckoutPage = () => {
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-900 focus:outline-none transition"
+                      className="w-full  text-black px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-900 focus:outline-none transition"
                       placeholder="Masukkan nama lengkap"
                       required
                     />
@@ -476,7 +476,7 @@ const CheckoutPage = () => {
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-900 focus:outline-none transition"
+                        className="w-full px-4 text-black py-3 border-2 border-gray-200 rounded-xl focus:border-blue-900 focus:outline-none transition"
                         placeholder="email@example.com"
                         required
                       />
@@ -492,7 +492,7 @@ const CheckoutPage = () => {
                         name="phone"
                         value={formData.phone}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-900 focus:outline-none transition"
+                        className="w-full text-black px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-900 focus:outline-none transition"
                         placeholder="08xxxxxxxxxx"
                         required
                       />
@@ -509,7 +509,7 @@ const CheckoutPage = () => {
                       value={formData.address}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-900 focus:outline-none transition resize-none"
+                      className="w-full text-black px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-900 focus:outline-none transition resize-none"
                       placeholder="Jalan, No. Rumah, RT/RW, Kelurahan"
                       required
                     ></textarea>
@@ -523,7 +523,7 @@ const CheckoutPage = () => {
                         name="city"
                         value={formData.city}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-900 focus:outline-none transition"
+                        className="w-full text-black px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-900 focus:outline-none transition"
                         placeholder="Kota"
                         required
                       />
@@ -536,7 +536,7 @@ const CheckoutPage = () => {
                         name="province"
                         value={formData.province}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-900 focus:outline-none transition"
+                        className="w-full px-4 text-black py-3 border-2 border-gray-200 rounded-xl focus:border-blue-900 focus:outline-none transition"
                         placeholder="Provinsi"
                         required
                       />
@@ -549,7 +549,7 @@ const CheckoutPage = () => {
                         name="postalCode"
                         value={formData.postalCode}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-900 focus:outline-none transition"
+                        className="w-full px-4 py-3 text-black border-2 border-gray-200 rounded-xl focus:border-blue-900 focus:outline-none transition"
                         placeholder="12345"
                       />
                     </div>
@@ -562,7 +562,7 @@ const CheckoutPage = () => {
                       value={formData.notes}
                       onChange={handleInputChange}
                       rows={2}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-900 focus:outline-none transition resize-none"
+                      className="w-full px-4 text-black py-3 border-2 border-gray-200 rounded-xl focus:border-blue-900 focus:outline-none transition resize-none"
                       placeholder="Catatan untuk pengrajin..."
                     ></textarea>
                   </div>

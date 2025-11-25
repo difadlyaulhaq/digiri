@@ -288,14 +288,14 @@ const ProductDetailPage = () => {
                 <div className="flex items-center gap-3 border-2 border-gray-400 rounded-xl px-4 py-3">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-8 h-8 bg-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-200 transition"
+                    className="w-8 h-8 text-black bg-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-200 transition"
                   >
                     <Minus size={16} />
                   </button>
                   <span className="font-bold text-lg w-8 text-center text-black">{quantity}</span>
                   <button
                     onClick={() => setQuantity(quantity + 1)}
-                    className="w-8 h-8 bg-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-200 transition"
+                    className="w-8 h-8 text-black bg-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-200 transition"
                   >
                     <Plus size={16} />
                   </button>
@@ -350,7 +350,7 @@ const ProductDetailPage = () => {
 
             {/* Additional Actions */}
             <div className="flex gap-4 pt-4">
-              <button
+              {/* <button
                 onClick={() => setIsFavorited(!isFavorited)}
                 className={`flex items-center gap-2 px-6 py-3 rounded-full border transition ${
                   isFavorited
@@ -364,7 +364,7 @@ const ProductDetailPage = () => {
               <button className="flex items-center gap-2 px-6 py-3 rounded-full border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition">
                 <Share2 size={20} />
                 Bagikan
-              </button>
+              </button> */}
             </div>
           </div>
         </div>

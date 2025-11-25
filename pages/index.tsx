@@ -309,8 +309,8 @@ const GiriloyoLanding = () => {
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Users className="w-8 h-8 text-white" />
               </div>
-              {/* <h3 className="text-lg lg:text-xl font-bold text-slate-800 mb-2">600+ Perajin</h3> */}
-              <p className="text-sm text-slate-600">Komunitas batik tulis terbesar di Yogyakarta</p>
+              <h3 className="text-lg lg:text-xl font-bold text-slate-800 mb-2">600+ Perajin</h3>
+              <p className="text-sm text-slate-600">Salah satu komunitas batik tulis terbesar dan tertua di Indonesia</p>
             </div>
 
             <div className="bg-white rounded-3xl p-6 lg:p-8 shadow-xl hover:shadow-2xl transition text-center transform hover:-translate-y-2">
@@ -334,7 +334,7 @@ const GiriloyoLanding = () => {
             <div className="relative group">
               <div className="absolute -inset-4 bg-gradient-to-r from-blue-900 to-slate-900 rounded-3xl blur-2xl opacity-20 group-hover:opacity-30 transition"></div>
               <img 
-                src="/modelcanting.png"
+                src="/modelcanting-real.jpg"
                 alt="Desa Giriloyo"
                 className="relative w-full h-auto rounded-3xl shadow-2xl"
               />

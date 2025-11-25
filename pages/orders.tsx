@@ -414,7 +414,7 @@ const OrdersPage = () => {
                           Periksa Status
                         </button>
                         <button 
-                          onClick={() => router.push('/checkout')}
+                          onClick={() => router.push('/checkoutpage')}
                           className="bg-white text-blue-900 border border-blue-900 px-4 py-2 rounded-lg hover:bg-blue-50 transition text-sm"
                         >
                           Bayar Sekarang
