@@ -85,11 +85,11 @@ const GiriloyoLanding = () => {
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
       {/* Animated Batik Background Pattern */}
-      <div className="fixed inset-0 opacity-10 pointer-events-none">
+      <div className="fixed inset-0 opacity-20 pointer-events-none">
         <div 
           className="absolute inset-0 animate-bg-scroll-slow"
           style={{
-            backgroundImage: `url('/megamendung.png')`,
+            backgroundImage: `url('/sidomukti-bledak-biru.jpg')`,
             backgroundSize: '300px 300px',
             backgroundRepeat: 'repeat',
           }}
