@@ -238,7 +238,7 @@ const ProductDetailPage = () => {
             </div>
 
             {/* Size Selection */}
-            <div>
+            {/* <div>
               <h3 className="font-bold text-gray-900 mb-3">Pilih Ukuran</h3>
               <div className="flex flex-wrap gap-3">
                 {product.sizes.map((size: string) => (
@@ -255,7 +255,7 @@ const ProductDetailPage = () => {
                   </button>
                 ))}
               </div>
-            </div>
+            </div> */}
 
             {/* Color Selection */}
             <div>
