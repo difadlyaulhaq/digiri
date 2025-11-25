@@ -290,29 +290,29 @@ const OrdersPage = () => {
                     <h4 className="font-semibold text-gray-900 mb-2">Informasi Pembayaran</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-600">Status:</span>
+                        <span className="text-black">Status:</span>
                         <span className={`font-semibold ${paymentStatus.color}`}>
                           {paymentStatus.text}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-600">Metode:</span>
-                        <div className="flex items-center gap-1">
+                        <span className="text-black">Metode:</span>
+                        <div className="flex items-center gap-1 text-black">
                           {getPaymentMethodIcon(order.paymentMethod)}
-                          <span className="font-semibold">
+                          <span className="font-semibold text-black">
                             {getPaymentMethodText(order.paymentMethod)}
                           </span>
                         </div>
                       </div>
                       {order.paymentMethod && (
                         <div className="flex items-center gap-2">
-                          <span className="text-gray-600">Provider:</span>
+                          <span className="text-black">Provider:</span>
                           <span className="font-semibold">Midtrans</span>
                         </div>
                       )}
                       {order.transactionId && (
                         <div className="flex items-center gap-2">
-                          <span className="text-gray-600">ID Transaksi:</span>
+                          <span className="text-black">ID Transaksi:</span>
                           <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
                             {order.transactionId}
                           </span>
