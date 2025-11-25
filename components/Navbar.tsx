@@ -113,7 +113,7 @@ const Navbar = () => {
             <Link href="/" className="cursor-pointer">
               <div className="relative w-30 h-20"> 
                 <Image 
-                  src="/LOGO-DIGIRI.png"
+                  src="/LOGO-DIGIRI-removebg.png"
                   alt="Logo"
                   fill  
                   className="object-contain"
