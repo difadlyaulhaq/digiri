@@ -8,7 +8,6 @@ import {
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Analytics } from "@vercel/analytics/next"
-// 1. IMPORT LIBRARY MARKDOWN
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -24,26 +23,59 @@ const AIChatPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  // Ref untuk auto-scroll
+  
+  // Refs untuk scroll management
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const shouldScrollRef = useRef(true);
 
+  // Fungsi scroll yang terkontrol
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (!shouldScrollRef.current) return;
+    
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ 
+        behavior: "smooth",
+        block: "nearest"
+      });
+    }, 50);
   };
 
+  // Scroll hanya ketika pesan AI baru ditambahkan atau chat direset
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (messages.length === 0) return;
 
-  // Initial greeting
+    const lastMessage = messages[messages.length - 1];
+    
+    // Hanya scroll otomatis untuk:
+    // 1. Pesan AI (bukan pesan user)
+    // 2. Atau ketika loading selesai (AI merespons)
+    if (!lastMessage.isUser || !isLoading) {
+      scrollToBottom();
+    }
+  }, [messages, isLoading]);
+
+  // Initial greeting - hanya sekali saat komponen mount
   useEffect(() => {
-    setMessages([{
-      id: '1',
-      content: 'Halo! Saya AI Assistant Desa Wisata Batik Giriloyo. Saya bisa membantu Anda mencari rekomendasi batik, menjawab pertanyaan tentang produk, memberikan informasi tentang batik, dan membantu proses pemesanan. Apa yang bisa saya bantu untuk Anda hari ini?',
-      isUser: false,
-      timestamp: new Date(),
-    }]);
+    if (messages.length === 0) {
+      setMessages([{
+        id: '1',
+        content: 'Halo! Saya AI Assistant Desa Wisata Batik Giriloyo. Saya bisa membantu Anda mencari rekomendasi batik, menjawab pertanyaan tentang produk, memberikan informasi tentang batik, dan membantu proses pemesanan. Apa yang bisa saya bantu untuk Anda hari ini?',
+        isUser: false,
+        timestamp: new Date(),
+      }]);
+    }
   }, []);
+
+  // Handle scroll manual user - disable auto scroll sementara
+  const handleUserScroll = () => {
+    if (!messagesContainerRef.current) return;
+    
+    const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
+    
+    shouldScrollRef.current = isAtBottom;
+  };
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +88,8 @@ const AIChatPage = () => {
       timestamp: new Date()
     };
 
+    // Enable auto scroll untuk pesan user baru
+    shouldScrollRef.current = true;
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
     setIsLoading(true);
@@ -78,6 +112,8 @@ const AIChatPage = () => {
         timestamp: new Date(),
       };
 
+      // Pastikan auto scroll aktif untuk respons AI
+      shouldScrollRef.current = true;
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
       console.error('Error:', error);
@@ -87,6 +123,7 @@ const AIChatPage = () => {
         isUser: false,
         timestamp: new Date(),
       };
+      shouldScrollRef.current = true;
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
@@ -94,12 +131,22 @@ const AIChatPage = () => {
   };
 
   const resetChat = () => {
+    shouldScrollRef.current = true;
     setMessages([{
       id: '1',
       content: 'Halo! Saya AI Assistant Desa Wisata Batik Giriloyo. Ada yang bisa saya bantu?',
       isUser: false,
       timestamp: new Date(),
     }]);
+  };
+
+  const handleQuickQuestionClick = (question: string) => {
+    setInputMessage(question);
+    // Focus ke input field setelah set question
+    setTimeout(() => {
+      const inputElement = document.querySelector('input[type="text"]') as HTMLInputElement;
+      inputElement?.focus();
+    }, 0);
   };
 
   const quickQuestions = [
@@ -159,7 +206,7 @@ const AIChatPage = () => {
                 {quickQuestions.map((question, index) => (
                   <button
                     key={index}
-                    onClick={() => setInputMessage(question)}
+                    onClick={() => handleQuickQuestionClick(question)}
                     className="w-full text-left p-3 text-sm text-stone-600 hover:bg-purple-50 rounded-lg transition border border-stone-100 hover:border-purple-200"
                   >
                     {question}
@@ -173,7 +220,11 @@ const AIChatPage = () => {
           <div className="lg:col-span-3">
             <div className="bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col h-[600px]">
               {/* Messages Area */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div 
+                ref={messagesContainerRef}
+                onScroll={handleUserScroll}
+                className="flex-1 overflow-y-auto p-4 space-y-4"
+              >
                 {messages.map((message) => (
                   <div key={message.id} className={`flex gap-3 ${message.isUser ? 'justify-end' : 'justify-start'}`}>
                     {!message.isUser && (
@@ -188,13 +239,10 @@ const AIChatPage = () => {
                           ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white' 
                           : 'bg-stone-100 text-stone-800'
                       }`}>
-                        
-                        {/* 2. IMPLEMENTASI REACT MARKDOWN */}
                         <div className="prose prose-sm max-w-none break-words">
                           <ReactMarkdown 
                             remarkPlugins={[remarkGfm]}
                             components={{
-                              // Kustomisasi elemen HTML agar styling Tailwind tetap rapi
                               p: ({node, ...props}) => <p className={`mb-2 last:mb-0 ${message.isUser ? 'text-white' : 'text-stone-800'}`} {...props} />,
                               strong: ({node, ...props}) => <strong className="font-bold" {...props} />,
                               ul: ({node, ...props}) => <ul className="list-disc ml-4 mb-2 space-y-1" {...props} />,
@@ -206,7 +254,6 @@ const AIChatPage = () => {
                             {message.content}
                           </ReactMarkdown>
                         </div>
-
                       </div>
                       <div className={`text-xs text-stone-500 mt-1 ${message.isUser ? 'text-right' : 'text-left'}`}>
                         {message.timestamp.toLocaleTimeString('id-ID', { 
@@ -238,7 +285,7 @@ const AIChatPage = () => {
                     </div>
                   </div>
                 )}
-                {/* Invisible element to scroll to */}
+                {/* Invisible element untuk scroll anchor */}
                 <div ref={messagesEndRef} />
               </div>
 
