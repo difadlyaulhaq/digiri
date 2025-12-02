@@ -1,4 +1,4 @@
-// utils/orderUtils.ts - DIPERBAIKI
+// utils/orderUtils.ts - FIXED: REMOVED ALL LIMITS
 import { 
   doc, 
   setDoc, 
@@ -7,7 +7,8 @@ import {
   collection,
   query,
   where,
-  getDocs
+  getDocs,
+  orderBy
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -42,13 +43,11 @@ export interface Order {
   nftFee: number;
   total: number;
   
-  // NFT Related Fields
   nftTransactionHash?: string;
   nftStatus?: 'pending' | 'minted' | 'failed';
   nftMintedAt?: string;
-  nftIds?: string[]; // Array of NFT IDs untuk multiple items
+  nftIds?: string[];
   
-  // Payment Fields
   paymentMethod?: string;
   paymentStatus?: 'pending' | 'settlement' | 'capture' | 'deny' | 'cancel' | 'expire' | 'failure';
   transactionId?: string;
@@ -59,14 +58,12 @@ export interface Order {
   trackingNumber?: string;
 }
 
-// Generate order ID
 const generateOrderId = (): string => {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2, 8).toUpperCase();
   return `GRLYO-${timestamp}-${random}`;
 };
 
-// Helper function untuk membersihkan data sebelum disimpan ke Firebase
 const cleanFirebaseData = (data: any): any => {
   const cleaned = { ...data };
   Object.keys(cleaned).forEach(key => {
@@ -77,7 +74,6 @@ const cleanFirebaseData = (data: any): any => {
   return cleaned;
 };
 
-// Create new order - DIPERBAIKI
 export const createOrder = async (
   items: OrderItem[],
   shippingAddress: Order['shippingAddress'],
@@ -94,7 +90,6 @@ export const createOrder = async (
     const guestId = typeof window !== 'undefined' ? localStorage.getItem('guestId') || 'unknown' : 'unknown';
     const orderId = generateOrderId();
     
-    // Buat order object tanpa field undefined
     const orderData: any = {
       orderId,
       guestId,
@@ -110,13 +105,11 @@ export const createOrder = async (
       estimatedDelivery: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
     };
 
-    // Hanya tambahkan field jika ada nilainya
     if (nftTransactionHash) orderData.nftTransactionHash = nftTransactionHash;
     if (paymentMethod) orderData.paymentMethod = paymentMethod;
     if (paymentStatus) orderData.paymentStatus = paymentStatus;
     if (transactionId) orderData.transactionId = transactionId;
 
-    // Bersihkan data sebelum disimpan
     const cleanedOrderData = cleanFirebaseData(orderData);
 
     console.log('💾 Menyimpan order ke Firebase:', {
@@ -128,8 +121,6 @@ export const createOrder = async (
 
     const orderRef = doc(db, 'orders', orderId);
     await setDoc(orderRef, cleanedOrderData);
-
-    // Juga simpan ke localStorage sebagai fallback
     saveOrderToLocalStorage(cleanedOrderData as Order);
 
     return cleanedOrderData as Order;
@@ -139,14 +130,14 @@ export const createOrder = async (
   }
 };
 
-// Get orders by guest ID - dengan improvement error handling
+// ✅ FIXED: Menghapus semua limit, ambil SEMUA orders
 export const getOrdersByGuestId = async (guestId: string): Promise<Order[]> => {
   try {
-    console.log('🔍 Mencari orders untuk guestId:', guestId);
+    console.log('🔍 Mencari SEMUA orders untuk guestId:', guestId);
     
     const ordersRef = collection(db, 'orders');
     
-    // Coba query dengan cara yang lebih sederhana dulu
+    // Query tanpa limit - ambil semua data
     const q = query(
       ordersRef, 
       where('guestId', '==', guestId)
@@ -161,26 +152,26 @@ export const getOrdersByGuestId = async (guestId: string): Promise<Order[]> => {
       orders.push(orderData);
     });
     
-    // Sort manually di client side untuk menghindari index issues
+    // Sort manual di client
     const sortedOrders = orders.sort((a, b) => 
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
     
-    console.log(`✅ Ditemukan ${sortedOrders.length} orders`);
+    console.log(`✅ Ditemukan SEMUA ${sortedOrders.length} orders (NO LIMIT)`);
     return sortedOrders;
     
   } catch (error) {
     console.error('❌ Error getting orders:', error);
     
-    // Fallback ke localStorage untuk development
     if (typeof window !== 'undefined') {
       try {
         const ordersJson = localStorage.getItem('orders');
         if (ordersJson) {
           const allOrders: Order[] = JSON.parse(ordersJson);
-          const userOrders = allOrders.filter(order => order.guestId === guestId)
+          const userOrders = allOrders
+            .filter(order => order.guestId === guestId)
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-          console.log(`📦 Fallback: Ditemukan ${userOrders.length} orders dari localStorage`);
+          console.log(`📦 Fallback: Ditemukan SEMUA ${userOrders.length} orders dari localStorage (NO LIMIT)`);
           return userOrders;
         }
       } catch (localStorageError) {
@@ -192,7 +183,6 @@ export const getOrdersByGuestId = async (guestId: string): Promise<Order[]> => {
   }
 };
 
-// Get order by ID
 export const getOrderById = async (orderId: string): Promise<Order | null> => {
   try {
     const orderRef = doc(db, 'orders', orderId);
@@ -205,7 +195,6 @@ export const getOrderById = async (orderId: string): Promise<Order | null> => {
   } catch (error) {
     console.error('Error getting order:', error);
     
-    // Fallback ke localStorage
     if (typeof window !== 'undefined') {
       const ordersJson = localStorage.getItem('orders');
       if (ordersJson) {
@@ -218,7 +207,6 @@ export const getOrderById = async (orderId: string): Promise<Order | null> => {
   }
 };
 
-// Update order status
 export const updateOrderStatus = async (orderId: string, status: Order['status']): Promise<boolean> => {
   try {
     const orderRef = doc(db, 'orders', orderId);
@@ -229,7 +217,6 @@ export const updateOrderStatus = async (orderId: string, status: Order['status']
 
     await updateDoc(orderRef, updateData);
 
-    // Juga update di localStorage
     if (typeof window !== 'undefined') {
       const ordersJson = localStorage.getItem('orders');
       if (ordersJson) {
@@ -248,7 +235,6 @@ export const updateOrderStatus = async (orderId: string, status: Order['status']
   }
 };
 
-// Simpan order ke localStorage sebagai fallback (untuk development)
 export const saveOrderToLocalStorage = (order: Order): void => {
   if (typeof window !== 'undefined') {
     const existingOrdersJson = localStorage.getItem('orders');
@@ -263,7 +249,6 @@ export const updateNFTStatus = async (orderId: string, nftStatus: 'pending' | 'm
   try {
     const orderRef = doc(db, 'orders', orderId);
     
-    // Buat update data tanpa field undefined
     const updateData: any = {
       nftStatus,
       updatedAt: new Date().toISOString()
@@ -273,12 +258,10 @@ export const updateNFTStatus = async (orderId: string, nftStatus: 'pending' | 'm
     if (nftTransactionHash) updateData.nftTransactionHash = nftTransactionHash;
     if (nftStatus === 'minted') updateData.nftMintedAt = new Date().toISOString();
 
-    // Bersihkan data sebelum update
     const cleanedUpdateData = cleanFirebaseData(updateData);
 
     await updateDoc(orderRef, cleanedUpdateData);
 
-    // Juga update di localStorage
     if (typeof window !== 'undefined') {
       const ordersJson = localStorage.getItem('orders');
       if (ordersJson) {
