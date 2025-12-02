@@ -516,6 +516,25 @@ const GiriloyoLanding = () => {
               </button>
             </Link>
             </div>
+            {/* game  */}
+            <div className="bg-white rounded-3xl shadow-xl p-6 lg:p-8 hover:shadow-2xl transition transform hover:-translate-y-2 border-2 border-transparent hover:border-blue-300">
+              <div className="bg-gradient-to-br from-blue-100 to-blue-200 w-16 h-16 lg:w-20 lg:h-20 rounded-2xl flex items-center justify-center mb-6 transform hover:rotate-12 transition">
+                <Gamepad2 className="text-blue-800" size={32} />
+              </div>
+              <div className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold mb-4">
+                🎮 PELESTARIAN BUDAYA
+              </div>
+              <h3 className="text-xl lg:text-2xl font-bold mb-4 text-slate-800">Mencanting Virtual 2.0</h3>
+              <p className="text-sm lg:text-base text-slate-600 mb-6 leading-relaxed">
+                Rasakan sensasi membatik secara virtual! Ikuti pola tradisional dan pelajari filosofi di balik setiap goresan untuk melestarikan warisan budaya.
+              </p>
+              <Link href="/mencanting-vr" passHref>
+              <button className="text-blue-800 font-semibold flex items-center gap-2 hover:gap-4 transition-all group">
+                Main Sekarang 
+                <ChevronRight size={20} className="group-hover:animate-bounce" />
+              </button>
+            </Link>
+            </div>
 
             {/* Game 2 */}
             <div className="bg-white rounded-3xl shadow-xl p-6 lg:p-8 hover:shadow-2xl transition transform hover:-translate-y-2 border-2 border-transparent hover:border-blue-300">
