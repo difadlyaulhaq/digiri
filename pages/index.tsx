@@ -486,114 +486,185 @@ const GiriloyoLanding = () => {
 
       {/* Interactive Games Section */}
       <section id="games" className="py-16 lg:py-24 px-4 bg-gradient-to-br from-blue-50 to-indigo-50 relative">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12 lg:mb-16">
-            <h2 className="text-3xl lg:text-5xl font-bold mb-4 text-slate-800">
-              Pelestarian Batik Secara Imersif
-            </h2>
-            <p className="text-base lg:text-lg text-slate-600 max-w-2xl mx-auto">
-              Jelajahi dunia batik melalui teknologi interaktif dan AI untuk melestarikan warisan budaya
-            </p>
-          </div>
+  <div className="max-w-7xl mx-auto">
+    <div className="text-center mb-12 lg:mb-16">
+      <h2 className="text-3xl lg:text-5xl font-bold mb-4 text-slate-800">
+        Pelestarian Batik Secara Imersif
+      </h2>
+      <p className="text-base lg:text-lg text-slate-600 max-w-2xl mx-auto">
+        Jelajahi dunia batik melalui teknologi interaktif dan AI untuk melestarikan warisan budaya
+      </p>
+    </div>
+    
+    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+      {/* Game 1: Mencanting 2D */}
+      <div className="bg-white rounded-3xl shadow-xl p-6 lg:p-8 hover:shadow-2xl transition transform hover:-translate-y-2 border-2 border-transparent hover:border-blue-300 group">
+        <div className="bg-gradient-to-br from-blue-100 to-blue-200 w-16 h-16 lg:w-20 lg:h-20 rounded-2xl flex items-center justify-center mb-6 transform group-hover:rotate-12 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-blue-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+        </div>
+        <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold mb-4">
+          <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+          🎮 PENGALAMAN 2D
+        </div>
+        <h3 className="text-xl lg:text-2xl font-bold mb-4 text-slate-800">Mencanting Virtual</h3>
+        <p className="text-sm lg:text-base text-slate-600 mb-6 leading-relaxed">
+          Pelajari teknik dasar membatik dengan interface 2D interaktif. Cocok untuk pemula yang ingin memahami pola dasar.
+        </p>
+        <Link href="/mencanting" passHref>
+          <button className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-3 px-6 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 group/btn">
+            <span>Mainkan Versi 2D</span>
+            <ChevronRight size={20} className="group-hover/btn:translate-x-1 transition-transform" />
+          </button>
+        </Link>
+      </div>
+
+      {/* Game 2: Mencanting VR */}
+      <div className="bg-white rounded-3xl shadow-xl p-6 lg:p-8 hover:shadow-2xl transition transform hover:-translate-y-2 border-2 border-transparent hover:border-amber-300 group relative overflow-hidden">
+        {/* Badge New */}
+        <div className="absolute top-4 right-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold z-10 animate-pulse">
+          🔥 TERBARU
+        </div>
+        
+        <div className="bg-gradient-to-br from-amber-100 to-orange-200 w-16 h-16 lg:w-20 lg:h-20 rounded-2xl flex items-center justify-center mb-6 transform group-hover:rotate-12 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-amber-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-bold mb-4">
+          <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
+          🥽 PENGALAMAN VR
+        </div>
+        <h3 className="text-xl lg:text-2xl font-bold mb-4 text-slate-800">Mencanting VR 3D</h3>
+        <p className="text-sm lg:text-base text-slate-600 mb-6 leading-relaxed">
+          Rasakan pengalaman imersif di ruangan virtual! Gambar langsung di atas kain dengan sistem tinta real-time.
+        </p>
+        <div className="space-y-3">
+          <Link href="/mencanting-vr" passHref>
+            <button className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white py-3 px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-2 group/btn shadow-lg">
+              <span className="text-lg">🎮 Mainkan VR</span>
+              <ChevronRight size={20} className="group-hover/btn:translate-x-1 transition-transform" />
+            </button>
+          </Link>
           
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-            {/* Game 1 */}
-            <div className="bg-white rounded-3xl shadow-xl p-6 lg:p-8 hover:shadow-2xl transition transform hover:-translate-y-2 border-2 border-transparent hover:border-blue-300">
-              <div className="bg-gradient-to-br from-blue-100 to-blue-200 w-16 h-16 lg:w-20 lg:h-20 rounded-2xl flex items-center justify-center mb-6 transform hover:rotate-12 transition">
-                <Gamepad2 className="text-blue-800" size={32} />
-              </div>
-              <div className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold mb-4">
-                🎮 PELESTARIAN BUDAYA
-              </div>
-              <h3 className="text-xl lg:text-2xl font-bold mb-4 text-slate-800">Mencanting Virtual</h3>
-              <p className="text-sm lg:text-base text-slate-600 mb-6 leading-relaxed">
-                Rasakan sensasi membatik secara virtual! Ikuti pola tradisional dan pelajari filosofi di balik setiap goresan untuk melestarikan warisan budaya.
-              </p>
-              <Link href="/mencanting" passHref>
-              <button className="text-blue-800 font-semibold flex items-center gap-2 hover:gap-4 transition-all group">
-                Main Sekarang 
-                <ChevronRight size={20} className="group-hover:animate-bounce" />
-              </button>
-            </Link>
+          {/* Fitur Unggulan */}
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="bg-amber-50 text-amber-700 px-2 py-1 rounded-lg text-center">
+              🎵 Musik Tradisional
             </div>
-            {/* game  */}
-            <div className="bg-white rounded-3xl shadow-xl p-6 lg:p-8 hover:shadow-2xl transition transform hover:-translate-y-2 border-2 border-transparent hover:border-blue-300">
-              <div className="bg-gradient-to-br from-blue-100 to-blue-200 w-16 h-16 lg:w-20 lg:h-20 rounded-2xl flex items-center justify-center mb-6 transform hover:rotate-12 transition">
-                <Gamepad2 className="text-blue-800" size={32} />
-              </div>
-              <div className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold mb-4">
-                🎮 PELESTARIAN BUDAYA
-              </div>
-              <h3 className="text-xl lg:text-2xl font-bold mb-4 text-slate-800">Mencanting Virtual 2.0</h3>
-              <p className="text-sm lg:text-base text-slate-600 mb-6 leading-relaxed">
-                Rasakan sensasi membatik secara virtual! Ikuti pola tradisional dan pelajari filosofi di balik setiap goresan untuk melestarikan warisan budaya.
-              </p>
-              <Link href="/mencanting-vr" passHref>
-              <button className="text-blue-800 font-semibold flex items-center gap-2 hover:gap-4 transition-all group">
-                Main Sekarang 
-                <ChevronRight size={20} className="group-hover:animate-bounce" />
-              </button>
-            </Link>
+            <div className="bg-amber-50 text-amber-700 px-2 py-1 rounded-lg text-center">
+              🔄 Undo/Reset
             </div>
+            <div className="bg-amber-50 text-amber-700 px-2 py-1 rounded-lg text-center">
+              🎯 3 Level
+            </div>
+            <div className="bg-amber-50 text-amber-700 px-2 py-1 rounded-lg text-center">
+              🖌️ Pattern Opacity
+            </div>
+          </div>
+        </div>
+      </div>
 
-            {/* Game 2 */}
-            <div className="bg-white rounded-3xl shadow-xl p-6 lg:p-8 hover:shadow-2xl transition transform hover:-translate-y-2 border-2 border-transparent hover:border-blue-300">
-              <div className="bg-gradient-to-br from-blue-100 to-blue-200 w-16 h-16 lg:w-20 lg:h-20 rounded-2xl flex items-center justify-center mb-6 transform hover:rotate-12 transition">
-                <Brain className="text-blue-800" size={32} />
-              </div>
-              <div className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold mb-4">
-                🧠 EDUKASI INTERAKTIF
-              </div>
-              <h3 className="text-xl lg:text-2xl font-bold mb-4 text-slate-800">Kuis Cerdas Batik</h3>
-              <p className="text-sm lg:text-base text-slate-600 mb-6 leading-relaxed">
-                Uji pengetahuan Anda tentang batik! Kompetisi real-time dengan sistem leaderboard yang dinamis.
-              </p>
-            <Link href="/kuis" passHref>
-                <button className="text-blue-800 font-semibold flex items-center gap-2 hover:gap-4 transition-all group">
-                Ikut Kuis 
-                <ChevronRight size={20} className="group-hover:animate-bounce" />
-              </button>
-            </Link>
-            </div>
+      {/* Game 3: Kuis */}
+      <div className="bg-white rounded-3xl shadow-xl p-6 lg:p-8 hover:shadow-2xl transition transform hover:-translate-y-2 border-2 border-transparent hover:border-blue-300 group">
+        <div className="bg-gradient-to-br from-blue-100 to-blue-200 w-16 h-16 lg:w-20 lg:h-20 rounded-2xl flex items-center justify-center mb-6 transform group-hover:rotate-12 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-blue-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold mb-4">
+          <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+          🧠 EDUKASI INTERAKTIF
+        </div>
+        <h3 className="text-xl lg:text-2xl font-bold mb-4 text-slate-800">Kuis Cerdas Batik</h3>
+        <p className="text-sm lg:text-base text-slate-600 mb-6 leading-relaxed">
+          Uji pengetahuan Anda tentang batik! Kompetisi real-time dengan sistem leaderboard yang dinamis.
+        </p>
+        <Link href="/kuis" passHref>
+          <button className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-3 px-6 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 group/btn">
+            <span>Ikut Kuis</span>
+            <ChevronRight size={20} className="group-hover/btn:translate-x-1 transition-transform" />
+          </button>
+        </Link>
+      </div>
 
-<Link href="/ai" passHref className="sm:col-span-2 lg:col-span-1 ">
-              <div className="relative overflow-hidden rounded-3xl shadow-xl group cursor-pointer h-full">
-                {/* Background Gradient Amber/Gold */}
-                <div className="absolute inset-0 bg-linear-to-br from-amber-500 to-orange-600 transition-transform duration-500 group-hover:scale-105"></div>
+      {/* AI Assistant - Full Width */}
+      <div className="sm:col-span-2 lg:col-span-1">
+        <Link href="/ai" passHref>
+          <div className="relative overflow-hidden rounded-3xl shadow-xl group cursor-pointer h-full min-h-[300px]">
+            {/* Background Gradient Amber/Gold */}
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600 transition-transform duration-500 group-hover:scale-105"></div>
+            
+            {/* Pattern Overlay */}
+            <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/batik.png')] mix-blend-overlay" />
+
+            {/* Content */}
+            <div className="relative p-6 lg:p-8 h-full flex flex-col justify-between text-white z-10">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold border border-white/30 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-yellow-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    AI ASSISTANT
+                  </div>
+                  <ChevronRight className="text-white/80 group-hover:translate-x-2 transition" size={24} />
+                </div>
                 
-                {/* Pattern Overlay biar ada tekstur batik dikit */}
-                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/batik.png')] mix-blend-overlay" />
+                <h3 className="text-2xl lg:text-3xl font-bold mb-2 leading-tight">
+                  Bingung Memilih Motif?
+                </h3>
+                <p className="text-white/90 text-sm lg:text-base leading-relaxed opacity-90 group-hover:opacity-100 transition">
+                  Tanya AI kami untuk rekomendasi batik yang pas buat acaramu!
+                </p>
+              </div>
 
-                {/* Content */}
-                  <div className="relative p-6 lg:p-8 h-60 flex-row justify-between text-white z-10">
-                    <div>
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold border border-white/30 flex items-center gap-2">
-                          <Sparkles size={14} className="text-yellow-200" />
-                          AI ASSISTANT
-                        </div>
-                        <ChevronRight className="text-white/80 group-hover:translate-x-2 transition" />
-                      </div>
-                      
-                      <h3 className="text-2xl lg:text-3xl font-bold mb-2 leading-tight">
-                        Bingung Memilih Motif?
-                      </h3>
-                      <p className="text-white/90 text-sm lg:text-base leading-relaxed opacity-90 group-hover:opacity-100 transition">
-                        Tanya AI kami untuk rekomendasi batik yang pas buat acaramu!
-                      </p>
-                    </div>
-
-                    {/* Fake Button Visual di Bawah */}
-                    <div className="mt-6 bg-white text-amber-600 py-3 px-4 rounded-xl font-bold text-center shadow-lg group-hover:bg-amber-50 transition flex items-center justify-center gap-2">
-                      <Sparkles size={18} />
-                      Coba Konsultasi AI
-                    </div>
+              {/* AI Features */}
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                  <span>Rekomendasi berdasarkan acara</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                  <span>Penjelasan filosofi motif</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                  <span>Tips kombinasi warna</span>
                 </div>
               </div>
-            </Link>
+
+              {/* Button */}
+              <div className="mt-6 bg-white text-amber-600 py-3 px-4 rounded-xl font-bold shadow-lg group-hover:bg-amber-50 transition flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Coba Konsultasi AI
+              </div>
             </div>
+          </div>
+        </Link>
+      </div>
+    </div>
+
+    {/* Info Tambahan */}
+    <div className="mt-12 text-center">
+      <div className="inline-flex items-center gap-4 bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full shadow-md">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+          <span className="text-sm text-slate-700">Mencanting 2D: Cocok untuk pemula</span>
         </div>
-      </section>
+        <div className="h-6 w-px bg-slate-300"></div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 bg-amber-500 rounded-full animate-pulse"></div>
+          <span className="text-sm text-slate-700">Mencanting VR: Pengalaman imersif</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
       {/* Bermacam-macam Patterns Section */}
       <section className="py-16 lg:py-24 px-4 bg-white relative">
