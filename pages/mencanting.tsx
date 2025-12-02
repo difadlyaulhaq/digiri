@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useEffect, useRef } from 'react';
 import { RotateCcw, Award, Star, Volume2, VolumeX, Clock, Droplets, Target, Undo, Book, History, Sparkles } from 'lucide-react';
 import { Analytics } from "@vercel/analytics/next"

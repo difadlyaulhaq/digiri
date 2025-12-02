@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Text, useGLTF, OrbitControls } from '@react-three/drei';
