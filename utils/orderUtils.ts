@@ -1,4 +1,4 @@
-// utils/orderUtils.ts - FIXED: REMOVED ALL LIMITS
+// utils/orderUtils.ts - VERSI DIPERBAIKI LENGKAP
 import { 
   doc, 
   setDoc, 
@@ -8,7 +8,10 @@ import {
   query,
   where,
   getDocs,
-  orderBy
+  orderBy,
+  writeBatch,
+  limit,
+  startAfter
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -21,6 +24,7 @@ export interface OrderItem {
   quantity: number;
   image: string;
   slug: string;
+  addedAt?: string;
 }
 
 export interface Order {
@@ -51,6 +55,8 @@ export interface Order {
   paymentMethod?: string;
   paymentStatus?: 'pending' | 'settlement' | 'capture' | 'deny' | 'cancel' | 'expire' | 'failure';
   transactionId?: string;
+  midtransOrderId?: string;
+  paidAt?: string;
   
   createdAt: string;
   updatedAt: string;
@@ -58,111 +64,203 @@ export interface Order {
   trackingNumber?: string;
 }
 
-const generateOrderId = (): string => {
+// Helper untuk generate order ID yang konsisten
+export const generateOrderId = (): string => {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2, 8).toUpperCase();
   return `GRLYO-${timestamp}-${random}`;
 };
 
+// Helper untuk membersihkan data Firebase
 const cleanFirebaseData = (data: any): any => {
   const cleaned = { ...data };
   Object.keys(cleaned).forEach(key => {
-    if (cleaned[key] === undefined) {
+    if (cleaned[key] === undefined || cleaned[key] === null) {
       delete cleaned[key];
     }
   });
   return cleaned;
 };
 
-export const createOrder = async (
-  items: OrderItem[],
+// **FUNGSI BARU: Buat order sebelum pembayaran** 
+export const createOrderBeforePayment = async (
+  cartItems: OrderItem[],
   shippingAddress: Order['shippingAddress'],
   subtotal: number,
   shipping: number,
   nftFee: number,
-  total: number,
-  nftTransactionHash?: string,
-  paymentMethod?: string,
-  paymentStatus?: string,
-  transactionId?: string
-): Promise<Order> => {
+  total: number
+): Promise<{ orderId: string; orderData: Order; success: boolean }> => {
   try {
-    const guestId = typeof window !== 'undefined' ? localStorage.getItem('guestId') || 'unknown' : 'unknown';
+    const guestId = typeof window !== 'undefined' 
+      ? localStorage.getItem('guestId') || 'guest_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+      : 'unknown';
+    
+    // Generate order ID yang akan digunakan di Midtrans
     const orderId = generateOrderId();
     
-    const orderData: any = {
+    // Simpan guestId ke localStorage jika belum ada
+    if (typeof window !== 'undefined' && !localStorage.getItem('guestId')) {
+      localStorage.setItem('guestId', guestId);
+    }
+    
+    const orderData: Order = {
       orderId,
       guestId,
-      items,
+      items: cartItems,
       shippingAddress,
-      status: paymentStatus === 'settlement' || paymentStatus === 'capture' ? 'paid' : 'pending',
+      status: 'pending',
       subtotal,
       shipping,
       nftFee,
       total,
+      paymentMethod: 'midtrans',
+      paymentStatus: 'pending',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       estimatedDelivery: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
     };
 
-    if (nftTransactionHash) orderData.nftTransactionHash = nftTransactionHash;
-    if (paymentMethod) orderData.paymentMethod = paymentMethod;
-    if (paymentStatus) orderData.paymentStatus = paymentStatus;
-    if (transactionId) orderData.transactionId = transactionId;
-
-    const cleanedOrderData = cleanFirebaseData(orderData);
-
-    console.log('💾 Menyimpan order ke Firebase:', {
+    console.log('💾 [PREPAYMENT] Menyimpan order ke Firebase:', {
       orderId,
-      status: orderData.status,
-      itemsCount: items.length,
-      total: total
+      total: total,
+      items: cartItems.length,
+      guestId
     });
 
+    // Simpan ke Firebase dengan batch write untuk keamanan
     const orderRef = doc(db, 'orders', orderId);
-    await setDoc(orderRef, cleanedOrderData);
-    saveOrderToLocalStorage(cleanedOrderData as Order);
-
-    return cleanedOrderData as Order;
+    await setDoc(orderRef, cleanFirebaseData(orderData));
+    
+    console.log('✅ [PREPAYMENT] Order berhasil disimpan di Firebase');
+    
+    // Simpan ke localStorage sebagai backup
+    saveOrderToLocalStorage(orderData);
+    
+    return {
+      orderId,
+      orderData,
+      success: true
+    };
   } catch (error) {
-    console.error('Error creating order:', error);
-    throw new Error('Gagal membuat pesanan');
+    console.error('❌ [PREPAYMENT] Error creating order:', error);
+    return {
+      orderId: '',
+      orderData: {} as Order,
+      success: false
+    };
   }
 };
 
-// ✅ FIXED: Menghapus semua limit, ambil SEMUA orders
+// **FUNGSI BARU: Update order setelah pembayaran berhasil**
+export const updateOrderAfterPayment = async (
+  orderId: string,
+  transactionId: string,
+  paymentStatus: string,
+  paymentMethod?: string
+): Promise<boolean> => {
+  try {
+    console.log('🔄 [POSTPAYMENT] Memperbarui order:', {
+      orderId,
+      transactionId,
+      paymentStatus
+    });
+
+    const orderRef = doc(db, 'orders', orderId);
+    
+    // Cek apakah order ada
+    const orderSnapshot = await getDoc(orderRef);
+    if (!orderSnapshot.exists()) {
+      console.error('❌ Order tidak ditemukan di Firebase:', orderId);
+      
+      // Coba cari di localStorage
+      if (typeof window !== 'undefined') {
+        const ordersJson = localStorage.getItem('orders');
+        if (ordersJson) {
+          const orders: Order[] = JSON.parse(ordersJson);
+          const localOrder = orders.find(o => o.orderId === orderId);
+          if (localOrder) {
+            console.log('📦 Order ditemukan di localStorage, mencoba sync ke Firebase');
+            // Coba sync ke Firebase
+            await setDoc(orderRef, cleanFirebaseData(localOrder));
+          }
+        }
+      }
+    }
+
+    // Update status pembayaran
+    const updateData: any = {
+      status: paymentStatus === 'settlement' || paymentStatus === 'capture' ? 'paid' : 'pending',
+      paymentStatus,
+      transactionId,
+      updatedAt: new Date().toISOString()
+    };
+
+    if (paymentMethod) {
+      updateData.paymentMethod = paymentMethod;
+    }
+
+    if (paymentStatus === 'settlement' || paymentStatus === 'capture') {
+      updateData.paidAt = new Date().toISOString();
+    }
+
+    await updateDoc(orderRef, cleanFirebaseData(updateData));
+    
+    console.log('✅ [POSTPAYMENT] Order berhasil diperbarui');
+    
+    // Update localStorage
+    if (typeof window !== 'undefined') {
+      const ordersJson = localStorage.getItem('orders');
+      if (ordersJson) {
+        const orders: Order[] = JSON.parse(ordersJson);
+        const updatedOrders = orders.map(order => {
+          if (order.orderId === orderId) {
+            return { ...order, ...updateData };
+          }
+          return order;
+        });
+        localStorage.setItem('orders', JSON.stringify(updatedOrders));
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.error('❌ [POSTPAYMENT] Error updating order:', error);
+    return false;
+  }
+};
+
+// **PERBAIKAN: getOrdersByGuestId dengan query yang aman**
 export const getOrdersByGuestId = async (guestId: string): Promise<Order[]> => {
   try {
-    console.log('🔍 Mencari SEMUA orders untuk guestId:', guestId);
+    console.log('🔍 Mencari orders untuk guestId:', guestId);
     
+    // Query sederhana tanpa orderBy untuk menghindari index error
     const ordersRef = collection(db, 'orders');
-    
-    // Query tanpa limit - ambil semua data
-    const q = query(
-      ordersRef, 
-      where('guestId', '==', guestId)
-    );
+    const q = query(ordersRef, where('guestId', '==', guestId));
     
     const querySnapshot = await getDocs(q);
     const orders: Order[] = [];
     
     querySnapshot.forEach((doc) => {
-      const orderData = doc.data() as Order;
-      console.log('📦 Order ditemukan:', orderData.orderId);
-      orders.push(orderData);
+      const data = doc.data();
+      orders.push({
+        ...data,
+        items: data.items || [],
+        shippingAddress: data.shippingAddress || {},
+        nftIds: data.nftIds || [],
+      } as Order);
     });
     
-    // Sort manual di client
-    const sortedOrders = orders.sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    // Sort secara manual di client side
+    orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     
-    console.log(`✅ Ditemukan SEMUA ${sortedOrders.length} orders (NO LIMIT)`);
-    return sortedOrders;
+    console.log(`✅ Ditemukan ${orders.length} orders`);
+    return orders;
+  } catch (error: any) {
+    console.error('Error getting orders:', error);
     
-  } catch (error) {
-    console.error('❌ Error getting orders:', error);
-    
+    // Fallback ke localStorage
     if (typeof window !== 'undefined') {
       try {
         const ordersJson = localStorage.getItem('orders');
@@ -171,8 +269,50 @@ export const getOrdersByGuestId = async (guestId: string): Promise<Order[]> => {
           const userOrders = allOrders
             .filter(order => order.guestId === guestId)
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-          console.log(`📦 Fallback: Ditemukan SEMUA ${userOrders.length} orders dari localStorage (NO LIMIT)`);
           return userOrders;
+        }
+      } catch (localStorageError) {
+        console.error('Error accessing localStorage:', localStorageError);
+      }
+    }
+    
+    return [];
+  }
+};
+
+// **FUNGSI BARU: Get All Orders (untuk verify certificate)**
+export const getAllOrders = async (): Promise<Order[]> => {
+  try {
+    console.log('🔍 Mengambil semua orders...');
+    
+    const ordersRef = collection(db, 'orders');
+    const q = query(ordersRef);
+    
+    const querySnapshot = await getDocs(q);
+    const orders: Order[] = [];
+    
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      orders.push({
+        ...data,
+        items: data.items || [],
+        shippingAddress: data.shippingAddress || {},
+        nftIds: data.nftIds || [],
+      } as Order);
+    });
+    
+    console.log(`✅ Ditemukan ${orders.length} orders total`);
+    return orders;
+  } catch (error: any) {
+    console.error('Error getting all orders:', error);
+    
+    // Fallback ke localStorage
+    if (typeof window !== 'undefined') {
+      try {
+        const ordersJson = localStorage.getItem('orders');
+        if (ordersJson) {
+          const allOrders: Order[] = JSON.parse(ordersJson);
+          return allOrders;
         }
       } catch (localStorageError) {
         console.error('Error accessing localStorage:', localStorageError);
@@ -185,24 +325,43 @@ export const getOrdersByGuestId = async (guestId: string): Promise<Order[]> => {
 
 export const getOrderById = async (orderId: string): Promise<Order | null> => {
   try {
+    console.log('🔍 Mencari order:', orderId);
+    
     const orderRef = doc(db, 'orders', orderId);
     const orderSnapshot = await getDoc(orderRef);
     
     if (orderSnapshot.exists()) {
-      return orderSnapshot.data() as Order;
+      const data = orderSnapshot.data();
+      const orderData: Order = {
+        ...data,
+        items: data.items || [],
+        shippingAddress: data.shippingAddress || {},
+        nftIds: data.nftIds || [],
+      } as Order;
+      
+      console.log('✅ Order ditemukan di Firebase');
+      return orderData;
     }
-    return null;
-  } catch (error) {
-    console.error('Error getting order:', error);
     
+    console.log('📦 Order tidak ditemukan di Firebase, cek localStorage');
+    
+    // Fallback ke localStorage
     if (typeof window !== 'undefined') {
       const ordersJson = localStorage.getItem('orders');
       if (ordersJson) {
         const orders: Order[] = JSON.parse(ordersJson);
-        return orders.find(order => order.orderId === orderId) || null;
+        const order = orders.find(o => o.orderId === orderId);
+        if (order) {
+          console.log('✅ Order ditemukan di localStorage');
+          return order;
+        }
       }
     }
     
+    console.log('❌ Order tidak ditemukan di mana pun');
+    return null;
+  } catch (error) {
+    console.error('Error getting order:', error);
     return null;
   }
 };
@@ -210,24 +369,14 @@ export const getOrderById = async (orderId: string): Promise<Order | null> => {
 export const updateOrderStatus = async (orderId: string, status: Order['status']): Promise<boolean> => {
   try {
     const orderRef = doc(db, 'orders', orderId);
-    const updateData = cleanFirebaseData({
+    await updateDoc(orderRef, {
       status,
       updatedAt: new Date().toISOString()
     });
-
-    await updateDoc(orderRef, updateData);
-
-    if (typeof window !== 'undefined') {
-      const ordersJson = localStorage.getItem('orders');
-      if (ordersJson) {
-        const orders: Order[] = JSON.parse(ordersJson);
-        const updatedOrders = orders.map(order => 
-          order.orderId === orderId ? { ...order, ...updateData } : order
-        );
-        localStorage.setItem('orders', JSON.stringify(updatedOrders));
-      }
-    }
-
+    
+    // Update localStorage
+    saveOrderToLocalStorage({ orderId, status } as Order);
+    
     return true;
   } catch (error) {
     console.error('Error updating order status:', error);
@@ -235,17 +384,13 @@ export const updateOrderStatus = async (orderId: string, status: Order['status']
   }
 };
 
-export const saveOrderToLocalStorage = (order: Order): void => {
-  if (typeof window !== 'undefined') {
-    const existingOrdersJson = localStorage.getItem('orders');
-    const existingOrders: Order[] = existingOrdersJson ? JSON.parse(existingOrdersJson) : [];
-    
-    const updatedOrders = [...existingOrders.filter(o => o.orderId !== order.orderId), order];
-    localStorage.setItem('orders', JSON.stringify(updatedOrders));
-  }
-};
-
-export const updateNFTStatus = async (orderId: string, nftStatus: 'pending' | 'minted' | 'failed', nftIds?: string[], nftTransactionHash?: string): Promise<boolean> => {
+export const updateNFTStatus = async (
+  orderId: string, 
+  nftStatus: 'pending' | 'minted' | 'failed', 
+  nftIds?: string[], 
+  nftTransactionHash?: string,
+  nftMintedAt?: string
+): Promise<boolean> => {
   try {
     const orderRef = doc(db, 'orders', orderId);
     
@@ -256,26 +401,180 @@ export const updateNFTStatus = async (orderId: string, nftStatus: 'pending' | 'm
 
     if (nftIds) updateData.nftIds = nftIds;
     if (nftTransactionHash) updateData.nftTransactionHash = nftTransactionHash;
-    if (nftStatus === 'minted') updateData.nftMintedAt = new Date().toISOString();
-
-    const cleanedUpdateData = cleanFirebaseData(updateData);
-
-    await updateDoc(orderRef, cleanedUpdateData);
-
-    if (typeof window !== 'undefined') {
-      const ordersJson = localStorage.getItem('orders');
-      if (ordersJson) {
-        const orders: Order[] = JSON.parse(ordersJson);
-        const updatedOrders = orders.map(order => 
-          order.orderId === orderId ? { ...order, ...cleanedUpdateData } : order
-        );
-        localStorage.setItem('orders', JSON.stringify(updatedOrders));
-      }
+    if (nftStatus === 'minted') {
+      updateData.nftMintedAt = nftMintedAt || new Date().toISOString();
     }
 
+    console.log('📝 Updating NFT status in database:', {
+      orderId,
+      nftStatus,
+      nftIds,
+      nftTransactionHash: nftTransactionHash?.substring(0, 20) + '...'
+    });
+
+    await updateDoc(orderRef, cleanFirebaseData(updateData));
+    
+    console.log('✅ NFT status updated successfully');
+    
+    // Update localStorage
+    saveOrderToLocalStorage({ orderId, ...updateData } as Order);
+    
     return true;
   } catch (error) {
     console.error('Error updating NFT status:', error);
     return false;
+  }
+};
+
+export const saveOrderToLocalStorage = (order: Partial<Order>): void => {
+  if (typeof window !== 'undefined' && order.orderId) {
+    const existingOrdersJson = localStorage.getItem('orders');
+    const existingOrders: Order[] = existingOrdersJson ? JSON.parse(existingOrdersJson) : [];
+    
+    const existingIndex = existingOrders.findIndex(o => o.orderId === order.orderId);
+    
+    if (existingIndex >= 0) {
+      // Update existing order
+      existingOrders[existingIndex] = { ...existingOrders[existingIndex], ...order };
+    } else {
+      // Add new order
+      existingOrders.push(order as Order);
+    }
+    
+    localStorage.setItem('orders', JSON.stringify(existingOrders));
+  }
+};
+
+// **FUNGSI BARU: Verifikasi dan sync order**
+export const verifyAndSyncOrder = async (orderId: string): Promise<{ exists: boolean; synced: boolean; order?: Order }> => {
+  try {
+    // Cek di Firebase
+    const firebaseOrder = await getOrderById(orderId);
+    
+    if (firebaseOrder) {
+      return { exists: true, synced: true, order: firebaseOrder };
+    }
+    
+    // Cek di localStorage
+    if (typeof window !== 'undefined') {
+      const ordersJson = localStorage.getItem('orders');
+      if (ordersJson) {
+        const orders: Order[] = JSON.parse(ordersJson);
+        const localOrder = orders.find(o => o.orderId === orderId);
+        
+        if (localOrder) {
+          // Coba sync ke Firebase
+          const orderRef = doc(db, 'orders', orderId);
+          await setDoc(orderRef, cleanFirebaseData(localOrder));
+          
+          return { exists: true, synced: true, order: localOrder };
+        }
+      }
+    }
+    
+    return { exists: false, synced: false };
+  } catch (error) {
+    console.error('Error verifying order:', error);
+    return { exists: false, synced: false };
+  }
+};
+
+// **FUNGSI BARU: Update status multiple orders**
+export const updateMultipleOrderStatuses = async (updates: Array<{ orderId: string; status: Order['status']; transactionId?: string }>): Promise<boolean> => {
+  try {
+    const batch = writeBatch(db);
+    
+    updates.forEach(update => {
+      const orderRef = doc(db, 'orders', update.orderId);
+      const updateData: any = {
+        status: update.status,
+        updatedAt: new Date().toISOString()
+      };
+      
+      if (update.status === 'paid') {
+        updateData.paymentStatus = 'settlement';
+        updateData.paidAt = new Date().toISOString();
+      }
+      
+      if (update.transactionId) {
+        updateData.transactionId = update.transactionId;
+      }
+      
+      batch.update(orderRef, cleanFirebaseData(updateData));
+    });
+    
+    await batch.commit();
+    
+    console.log(`✅ Updated ${updates.length} orders`);
+    
+    // Update localStorage
+    if (typeof window !== 'undefined') {
+      const ordersJson = localStorage.getItem('orders');
+      if (ordersJson) {
+        const orders: Order[] = JSON.parse(ordersJson);
+        const updatedOrders = orders.map(order => {
+          const update = updates.find(u => u.orderId === order.orderId);
+          if (update) {
+            return { ...order, status: update.status };
+          }
+          return order;
+        });
+        localStorage.setItem('orders', JSON.stringify(updatedOrders));
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error updating multiple orders:', error);
+    return false;
+  }
+};
+
+// **FUNGSI BARU: Search orders by various criteria**
+export const searchOrders = async (criteria: {
+  nftId?: string;
+  transactionHash?: string;
+  orderId?: string;
+  customerEmail?: string;
+}): Promise<Order[]> => {
+  try {
+    console.log('🔍 Searching orders with criteria:', criteria);
+    
+    const allOrders = await getAllOrders();
+    let filteredOrders = [...allOrders];
+    
+    // Filter berdasarkan criteria
+    if (criteria.nftId) {
+      filteredOrders = filteredOrders.filter(order => 
+        order.nftIds && order.nftIds.some(id => 
+          id.toLowerCase().includes(criteria.nftId!.toLowerCase())
+        )
+      );
+    }
+    
+    if (criteria.transactionHash) {
+      filteredOrders = filteredOrders.filter(order => 
+        order.nftTransactionHash && 
+        order.nftTransactionHash.toLowerCase().includes(criteria.transactionHash!.toLowerCase())
+      );
+    }
+    
+    if (criteria.orderId) {
+      filteredOrders = filteredOrders.filter(order => 
+        order.orderId.toLowerCase().includes(criteria.orderId!.toLowerCase())
+      );
+    }
+    
+    if (criteria.customerEmail) {
+      filteredOrders = filteredOrders.filter(order => 
+        order.shippingAddress.email?.toLowerCase().includes(criteria.customerEmail!.toLowerCase())
+      );
+    }
+    
+    console.log(`✅ Found ${filteredOrders.length} orders matching criteria`);
+    return filteredOrders;
+  } catch (error) {
+    console.error('Error searching orders:', error);
+    return [];
   }
 };

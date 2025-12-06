@@ -1,7 +1,7 @@
 // pages/api/nft/send-email.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getOrderById } from '@/utils/orderUtils';
-import { sendNFTConfirmationEmail } from './mint';
+import { getOrderById, updateNFTStatus } from '@/utils/orderUtils';
+import { sendNFTConfirmationEmail } from '@/lib/email';
 
 export default async function handler(
   req: NextApiRequest,
@@ -50,42 +50,72 @@ export default async function handler(
       });
     }
 
-    // 3. Get the first NFT ID
+    // 3. Get NFT ID and product name
     const nftId = order.nftIds[0];
     const productName = order.items[0]?.name || 'Batik Giriloyo';
+    
+    let txHash = order.nftTransactionHash;
+    let contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS; // default
+
+    // 4. If transaction hash is missing, fetch from Crossmint
+    if (!txHash) {
+      console.log(`🟡 Transaction hash missing for order ${orderId}. Fetching from Crossmint...`);
+      const crossmintUrl = `https://www.crossmint.com/api/2022-06-09/collections/${process.env.CROSSMINT_COLLECTION_ID}/nfts/${nftId}`;
+      const options = {
+        method: 'GET',
+        headers: {
+          'X-API-KEY': process.env.CROSSMINT_API_KEY!
+        }
+      };
+
+      const crossmintResponse = await fetch(crossmintUrl, options);
+      if (!crossmintResponse.ok) {
+        throw new Error(`Failed to fetch NFT details from Crossmint: ${crossmintResponse.statusText}`);
+      }
+      
+      const nftDetails = await crossmintResponse.json();
+      txHash = nftDetails.onChain?.txId;
+      contractAddress = nftDetails.onChain?.contractAddress;
+
+      if (txHash) {
+        console.log(`🟢 Fetched transaction hash ${txHash} from Crossmint. Updating DB...`);
+        await updateNFTStatus(orderId, 'minted', order.nftIds, txHash);
+      } else {
+        console.error(`🔴 Could not retrieve transaction hash from Crossmint for NFT ID ${nftId}`);
+        throw new Error('Could not retrieve transaction hash from Crossmint.');
+      }
+    }
+
+    const openseaUrl = `https://opensea.io/assets/matic/${contractAddress}/${nftId}`;
 
     console.log('🎯 Sending NFT email with details:', {
       customerEmail: order.shippingAddress.email,
       customerName: order.shippingAddress.name,
       productName: productName,
-      nftId: nftId
+      nftId: nftId,
+      txId: txHash
     });
 
-    // 4. Send NFT confirmation email and await the result
-    const emailResult = await sendNFTConfirmationEmail(
-      order.shippingAddress.email,
-      order.shippingAddress.name,
-      productName,
-      nftId
-    );
+    // 5. Send NFT confirmation email
+    const emailResult = await sendNFTConfirmationEmail({
+      customerEmail: order.shippingAddress.email,
+      customerName: order.shippingAddress.name,
+      productName: productName,
+      nftId: nftId,
+      txId: txHash,
+      openseaUrl: openseaUrl,
+    });
 
-    // 5. Check the result from the email function
+    // 6. Check the result
     if (emailResult.success) {
       console.log(`✅ NFT email sent successfully for order: ${orderId}`);
       res.status(200).json({
         success: true,
-        orderId: orderId,
-        customerEmail: order.shippingAddress.email,
-        nftId: nftId,
         message: 'Email konfirmasi NFT berhasil dikirim'
       });
     } else {
       console.error(`❌ Failed to send NFT email for order: ${orderId}`, emailResult.error);
-      res.status(500).json({
-        success: false,
-        orderId: orderId,
-        error: emailResult.error || 'Gagal mengirim email konfirmasi NFT'
-      });
+      throw new Error('Failed to send NFT email.');
     }
 
   } catch (error: any) {

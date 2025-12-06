@@ -514,6 +514,42 @@ const products = [
     motif: "Kendhit Kawung",
     category: "klasik",
     featured: false
+  }, 
+  //batik laba laba
+  {
+    id: 15,
+    slug: "batik-Laba-Laba",
+    name: "Batik Laba Laba",
+    price: 1400000,
+    originalPrice: 1400000,
+    discount: 19,
+    rating: 4.9,
+    reviews: 115,
+    sold: 150,
+    artisan: "Bu Endang",
+    location: "Giriloyo, Yogyakarta",
+    image: "/labalaba.jpg",
+    images: [
+      "/labalaba.jpg",
+    ],
+    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    colors: [
+      { id: 'laba-laba', name: 'Laba Laba', hex: '#708090' }
+    ],
+    description: "Motif Laba Laba adalah salah satu motif batik yang memancarkan keindahan dan makna mendalam dalam budaya Jawa. Motif ini menggambarkan jaring laba-laba yang melambangkan keterhubungan, kesabaran, dan ketekunan dalam menjalani kehidupan. Laba-laba dikenal sebagai makhluk yang rajin dan tekun dalam membangun jaringnya, mencerminkan nilai-nilai kerja keras dan dedikasi. Dengan pola jaring yang rumit dan simetris, motif Laba Laba menciptakan tampilan visual yang menarik dan penuh arti, menjadikannya pilihan yang sempurna untuk mereka yang menghargai seni batik tradisional dengan sentuhan makna mendalam.",
+    features: [
+      "100% Katun Premium",
+      "Pewarna Alami",
+      "Proses Tulis Tangan (7-14 hari)",
+      "Sertifikat Keaslian",
+      "NFT Digital Gratis",
+      "Garansi Luntur 1 Tahun"
+    ],
+    processingTime: "7-14 hari kerja",
+    nftIncluded: true,
+    motif: "Laba Laba",
+    category: "kontemporer",
+    featured: false
   }
 ];
 export default products;

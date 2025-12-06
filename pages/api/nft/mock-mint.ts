@@ -1,8 +1,9 @@
-// pages/api/nft/mock-mint.ts - DIPERBAIKI
+// pages/api/nft/mock-mint.ts - VERSI DIPERBAIKI
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { updateNFTStatus, getOrderById } from '@/utils/orderUtils';
-import { sendEmail } from '@/lib/email';
+import { sendNFTConfirmationEmail } from '@/lib/email';
 
+// ===== TYPES =====
 interface MockMintRequest {
   orderId: string;
   customerEmail?: string;
@@ -15,296 +16,246 @@ interface MockMintRequest {
   processingTime?: string;
 }
 
+interface MockNFTData {
+  nftId: string;
+  transactionHash: string;
+  contractAddress: string;
+}
+
+interface APIResponse {
+  success: boolean;
+  nftId?: string;
+  transactionHash?: string;
+  contractAddress?: string;
+  emailSent?: boolean;
+  customerEmail?: string;
+  nftMintedAt?: string;
+  message?: string;
+  note?: string;
+  error?: string;
+  orderId?: string;
+}
+
+// ===== HELPER FUNCTIONS =====
+
+/**
+ * Safely parse request data based on method
+ */
+function parseRequestData(req: NextApiRequest): MockMintRequest {
+  if (req.method === 'POST') {
+    return req.body as MockMintRequest;
+  } else {
+    // For GET requests, extract from query parameters
+    const query = req.query;
+    return {
+      orderId: Array.isArray(query.orderId) ? query.orderId[0] : query.orderId || '',
+      customerEmail: Array.isArray(query.customerEmail) ? query.customerEmail[0] : query.customerEmail,
+      customerName: Array.isArray(query.customerName) ? query.customerName[0] : query.customerName,
+      productName: Array.isArray(query.productName) ? query.productName[0] : query.productName,
+      productImage: Array.isArray(query.productImage) ? query.productImage[0] : query.productImage,
+      artisan: Array.isArray(query.artisan) ? query.artisan[0] : query.artisan,
+      location: Array.isArray(query.location) ? query.location[0] : query.location,
+      motif: Array.isArray(query.motif) ? query.motif[0] : query.motif,
+      processingTime: Array.isArray(query.processingTime) ? query.processingTime[0] : query.processingTime,
+    };
+  }
+}
+
+/**
+ * Generate mock blockchain data
+ */
+function generateMockBlockchainData(): MockNFTData {
+  const timestamp = Date.now();
+  const randomString = Math.random().toString(36).substring(2, 11);
+  
+  return {
+    nftId: `mock-nft-${timestamp}-${randomString}`,
+    transactionHash: `0x${Array.from({ length: 64 }, () => 
+      Math.floor(Math.random() * 16).toString(16)).join('')}`,
+    contractAddress: `0x${Array.from({ length: 40 }, () => 
+      Math.floor(Math.random() * 16).toString(16)).join('')}`
+  };
+}
+
+/**
+ * Extract product motif from product name
+ */
+function extractMotif(productName: string): string {
+  const motifMatch = productName.match(/Motif\s+(.+)/i);
+  return motifMatch ? motifMatch[1] : productName;
+}
+
+// ===== MAIN HANDLER =====
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse<APIResponse>
 ) {
-  // Terima kedua method GET dan POST
+  // Accept both GET and POST for flexibility in development
   if (req.method !== 'POST' && req.method !== 'GET') {
-    return res.status(405).json({ message: 'Method not allowed' });
+    return res.status(405).json({ 
+      success: false, 
+      error: 'Method not allowed. Use POST or GET.' 
+    });
   }
 
-  // Untuk GET, ambil orderId dari query string
-  // Untuk POST, ambil dari body
-  const { 
-    orderId, 
-    customerEmail, 
-    customerName, 
-    productName, 
-    productImage,
-    artisan,
-    location,
-    motif,
-    processingTime
-  } = req.method === 'POST' ? req.body : req.query;
-
   try {
-    console.log('🎭 Creating mock NFT for order:', orderId);
+    // Parse request data safely
+    const requestData = parseRequestData(req);
+    const { orderId } = requestData;
 
-    // Validasi input
-    if (!orderId || typeof orderId !== 'string') {
+    // ===== VALIDATION =====
+    console.log('🎭 Starting mock NFT minting process...');
+    
+    if (!orderId || typeof orderId !== 'string' || orderId.trim() === '') {
+      console.error('❌ Invalid order ID:', orderId);
       return res.status(400).json({
         success: false,
-        error: 'Valid Order ID is required'
+        error: 'Valid Order ID is required (string)'
       });
     }
 
-    // Cek apakah order exists
+    // ===== FETCH ORDER =====
+    console.log(`🔍 Looking up order: ${orderId}`);
     const order = await getOrderById(orderId);
+    
     if (!order) {
+      console.error(`❌ Order not found: ${orderId}`);
       return res.status(404).json({
         success: false,
-        error: 'Order not found'
+        error: 'Order not found',
+        orderId
       });
     }
 
-    console.log('📦 Order found:', {
+    console.log('✅ Order found:', {
       orderId: order.orderId,
-      customerEmail: order.shippingAddress.email,
-      customerName: order.shippingAddress.name
+      status: order.status,
+      nftStatus: order.nftStatus,
+      itemsCount: order.items?.length || 0
     });
 
-    // Gunakan data dari order jika tidak disediakan di request
-    const finalCustomerEmail = customerEmail || order.shippingAddress.email;
-    const finalCustomerName = customerName || order.shippingAddress.name;
-    const finalProductName = productName || order.items[0]?.name || 'Batik Giriloyo';
-    const finalArtisan = artisan || "Pengrajin Giriloyo";
-    const finalLocation = location || "Desa Giriloyo, Yogyakarta";
-    const finalMotif = motif || finalProductName.split('Motif ')[1] || finalProductName;
-    const finalProcessingTime = processingTime || "14-21 hari";
-
-    // Generate realistic mock data
-    const mockNftId = `mock-nft-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const mockTransactionHash = `0x${Array.from({length: 64}, () => 
-      Math.floor(Math.random() * 16).toString(16)).join('')}`;
+    // ===== PREPARE NFT DATA =====
+    const shippingAddress = order.shippingAddress || {};
+    const firstItem = order.items?.[0] || {};
     
-    const mockContractAddress = '0x' + Array.from({length: 40}, () => 
-      Math.floor(Math.random() * 16).toString(16)).join('');
+    const finalData = {
+      customerEmail: requestData.customerEmail || shippingAddress.email,
+      customerName: requestData.customerName || shippingAddress.name,
+      productName: requestData.productName || firstItem.name || 'Batik Giriloyo',
+      artisan: requestData.artisan || "Pengrajin Giriloyo",
+      location: requestData.location || "Desa Giriloyo, Yogyakarta",
+      motif: requestData.motif || extractMotif(firstItem.name || 'Batik Tradisional'),
+      processingTime: requestData.processingTime || "14-21 hari"
+    };
 
+    // Validate required fields
+    if (!finalData.customerEmail) {
+      console.error('❌ No customer email available');
+      return res.status(400).json({
+        success: false,
+        error: 'Customer email is required',
+        orderId
+      });
+    }
+
+    // ===== GENERATE MOCK NFT =====
+    console.log('🔄 Generating mock NFT data...');
+    const mockData = generateMockBlockchainData();
+    const nftMintedAt = new Date().toISOString();
+    
     console.log('✅ Mock NFT data generated:', {
-      nftId: mockNftId,
-      transactionHash: mockTransactionHash,
-      customerEmail: finalCustomerEmail
+      nftId: mockData.nftId,
+      txHash: mockData.transactionHash.substring(0, 20) + '...',
+      customerEmail: finalData.customerEmail,
+      mintedAt: nftMintedAt
     });
 
-    // Simpan ke database
+    // ===== UPDATE DATABASE =====
+    console.log('💾 Saving to database...');
+    
+    // Create array of NFT IDs (for multiple items, create one NFT per order)
+    const nftIds = [mockData.nftId];
+    
     const updateSuccess = await updateNFTStatus(
-      orderId, 
-      'minted', 
-      [mockNftId], 
-      mockTransactionHash
+      orderId,
+      'minted',
+      nftIds,
+      mockData.transactionHash,
+      nftMintedAt
     );
 
     if (!updateSuccess) {
       throw new Error('Failed to update NFT status in database');
     }
+    console.log('✅ Database updated successfully');
 
-    console.log('💾 Mock NFT saved to database for order:', orderId);
-
-    // Kirim email konfirmasi NFT
-    console.log('📧 Attempting to send NFT email to:', finalCustomerEmail);
-    const emailResult = await sendNFTConfirmationEmail(
-      finalCustomerEmail, 
-      finalCustomerName, 
-      finalProductName, 
-      mockNftId,
-      mockTransactionHash
-    );
-
-    console.log('📧 Email result:', emailResult);
-
-    if (!emailResult.success) {
-      console.error('❌ Failed to send NFT email:', emailResult.error);
-      // Tetap return success karena NFT sudah dibuat, hanya email yang gagal
+    // ===== SEND EMAIL =====
+    console.log(`📧 Preparing email for: ${finalData.customerEmail}`);
+    let emailResult: { success: boolean; error?: any };
+    
+    if (finalData.customerEmail) {
+        const openseaUrl = `https://opensea.io/assets/matic/${mockData.contractAddress}/${mockData.nftId}`;
+        emailResult = await sendNFTConfirmationEmail({
+            customerEmail: finalData.customerEmail,
+            customerName: finalData.customerName || 'Pelanggan',
+            productName: finalData.productName,
+            nftId: mockData.nftId,
+            txId: mockData.transactionHash,
+            openseaUrl: openseaUrl
+        });
+    } else {
+      emailResult = { success: false, error: 'No customer email provided' };
     }
 
-    res.status(200).json({
+    // ===== SUCCESS RESPONSE =====
+    const response: APIResponse = {
       success: true,
-      nftId: mockNftId,
-      transactionHash: mockTransactionHash,
-      contractAddress: mockContractAddress,
+      nftId: mockData.nftId,
+      transactionHash: mockData.transactionHash,
+      contractAddress: mockData.contractAddress,
       emailSent: emailResult.success,
-      customerEmail: finalCustomerEmail,
+      customerEmail: finalData.customerEmail,
+      nftMintedAt: nftMintedAt,
       message: 'Mock NFT berhasil dibuat (Development Mode)',
-      note: 'Ini adalah NFT mock untuk development'
-    });
+      note: 'Ini adalah NFT mock untuk development. Di production, akan menggunakan blockchain sesungguhnya.'
+    };
+
+    console.log('🎉 Mock NFT process completed successfully');
+    return res.status(200).json(response);
 
   } catch (error: any) {
+    // ===== ERROR HANDLING =====
     console.error('❌ Mock NFT creation error:', error);
     
-    // Try to update status to failed
+    // Try to extract orderId from request
+    let orderId: string | undefined;
     try {
-      await updateNFTStatus(orderId as string, 'failed');
-    } catch (dbError) {
-      console.error('Error updating NFT status to failed:', dbError);
+      const requestData = parseRequestData(req);
+      orderId = requestData.orderId;
+    } catch {
+      // If parsing fails, try to get from query or body directly
+      if (req.method === 'POST') {
+        orderId = req.body?.orderId;
+      } else {
+        const query = req.query;
+        orderId = Array.isArray(query.orderId) ? query.orderId[0] : query.orderId;
+      }
     }
 
-    res.status(500).json({
+    // Update status to failed in database if we have orderId
+    if (orderId) {
+      try {
+        await updateNFTStatus(orderId, 'failed');
+        console.log(`⚠️ Updated order ${orderId} status to 'failed'`);
+      } catch (dbError) {
+        console.error('Error updating NFT status to failed:', dbError);
+      }
+    }
+
+    return res.status(500).json({
       success: false,
-      error: error.message || 'Gagal membuat mock NFT',
-      orderId: orderId
+      error: error.message || 'Internal server error during mock NFT creation',
+      orderId: orderId || 'unknown'
     });
-  }
-}
-
-// Fungsi untuk mengirim email konfirmasi NFT (tetap sama)
-async function sendNFTConfirmationEmail(
-  customerEmail: string, 
-  customerName: string, 
-  productName: string, 
-  nftId: string,
-  transactionHash: string
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    console.log(`📧 Sending NFT confirmation email to: ${customerEmail}`);
-
-    const emailContent = {
-      to: customerEmail,
-      subject: `🎨 NFT Certificate untuk ${productName} - Batik Giriloyo`,
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <style>
-            body { 
-              font-family: 'Arial', sans-serif; 
-              line-height: 1.6; 
-              color: #333; 
-              margin: 0; 
-              padding: 0; 
-              background-color: #f8fafc;
-            }
-            .container { 
-              max-width: 600px; 
-              margin: 0 auto; 
-              padding: 20px; 
-              background-color: white;
-            }
-            .header { 
-              background: linear-gradient(135deg, #1e3a8a, #0f172a); 
-              color: white; 
-              padding: 30px; 
-              text-align: center; 
-              border-radius: 10px 10px 0 0; 
-            }
-            .content { 
-              background: #f8fafc; 
-              padding: 30px; 
-              border-radius: 0 0 10px 10px; 
-            }
-            .nft-card { 
-              background: white; 
-              padding: 20px; 
-              border-radius: 8px; 
-              border-left: 4px solid #1e3a8a; 
-              margin: 20px 0; 
-              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            }
-            .footer { 
-              text-align: center; 
-              margin-top: 30px; 
-              color: #64748b; 
-              font-size: 14px; 
-              padding-top: 20px;
-              border-top: 1px solid #e2e8f0;
-            }
-            .button {
-              display: inline-block;
-              background: linear-gradient(135deg, #1e3a8a, #0f172a);
-              color: white;
-              padding: 12px 24px;
-              text-decoration: none;
-              border-radius: 8px;
-              font-weight: bold;
-              margin: 10px 0;
-            }
-            .development-note {
-              background: #fef3c7;
-              padding: 15px;
-              border-radius: 8px;
-              border-left: 4px solid #f59e0b;
-              margin: 20px 0;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1>🎨 Selamat ${customerName}!</h1>
-              <p>NFT Certificate Batik Giriloyo Anda Telah Siap</p>
-            </div>
-            <div class="content">
-              <p>Halo <strong>${customerName}</strong>,</p>
-              
-              <div class="nft-card">
-                <h3>📦 Detail NFT Certificate</h3>
-                <p><strong>Produk:</strong> ${productName}</p>
-                <p><strong>NFT ID:</strong> <code>${nftId}</code></p>
-                <p><strong>Transaction Hash:</strong> <code>${transactionHash}</code></p>
-                <p><strong>Status:</strong> ✅ Berhasil Dicetak</p>
-                <p><strong>Tanggal:</strong> ${new Date().toLocaleDateString('id-ID')}</p>
-              </div>
-
-              <p>🎉 <strong>NFT Certificate</strong> untuk produk <strong>${productName}</strong> telah berhasil dibuat dan dikirim ke wallet digital Anda.</p>
-              
-              <h4>📍 Cara Melihat NFT Anda:</h4>
-              <ol>
-                <li>Buka email ini di perangkat Anda</li>
-                <li>NFT telah dikirim ke wallet Crossmint Anda</li>
-                <li>Download aplikasi Crossmint Wallet atau kunjungi crossmint.com</li>
-                <li>Login dengan email: <strong>${customerEmail}</strong></li>
-                <li>NFT Anda akan muncul di koleksi</li>
-              </ol>
-
-              <p>✨ <strong>NFT ini adalah sertifikat keaslian digital</strong> yang membuktikan kepemilikan dan keaslian batik tulis Giriloyo Anda.</p>
-
-              <div style="background: #dcfce7; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                <p>🛡️ <strong>Keamanan & Keaslian Terjamin</strong></p>
-                <p>Setiap NFT memiliki identifikasi unik di blockchain Polygon yang tidak bisa dipalsukan.</p>
-              </div>
-
-              <div class="development-note">
-                <p>💡 <strong>Development Note</strong></p>
-                <p>Ini adalah NFT mock untuk keperluan development. Di lingkungan production, NFT ini akan dicetak di blockchain Polygon yang sesungguhnya.</p>
-              </div>
-
-              <a href="https://digiri.vercel.app/orders" class="button">
-                Lihat Pesanan Saya
-              </a>
-            </div>
-            <div class="footer">
-              <p>Terima kasih telah mendukung pengrajin batik tradisional Giriloyo! 🎨</p>
-              <p><strong>Batik Giriloyo</strong> - Desa Giriloyo, Yogyakarta</p>
-              <p>Email: difadlyaulhaq2@gmail.com | Website: https://digiri.vercel.app</p>
-              <p style="font-size: 12px; color: #94a3b8; margin-top: 10px;">
-                Email ini dikirim otomatis, mohon tidak membalas email ini.
-              </p>
-            </div>
-          </div>
-        </body>
-        </html>
-      `
-    };
-
-    const result = await sendEmail(emailContent);
-    
-    if (result.success) {
-      console.log(`✅ NFT confirmation email sent to: ${customerEmail}`);
-      return { success: true };
-    } else {
-      console.error(`❌ Failed to send NFT email to: ${customerEmail}`, result.error);
-      return { 
-        success: false, 
-        error: result.error || 'Unknown email error' 
-      };
-    }
-
-  } catch (error: any) {
-    console.error('Error sending NFT confirmation email:', error);
-    return {
-      success: false,
-      error: error.message || 'Failed to send NFT confirmation email'
-    };
   }
 }
